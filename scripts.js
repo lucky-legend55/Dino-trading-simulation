@@ -15,6 +15,11 @@ to_simulate.addEventListener("click",function(){
     to_simulate.remove();
     simulation.hidden = false;
     intros.hidden = true;
+    // >>> CHANGED (1): link the simulation to what the player chose on the intro screen
+    cash = bank;                           // the simulation bank = the money left after buying the starting dinos
+    holdings = dinos.map(d => d.total);    // the simulation starts with the dinos the player picked
+    draw();                                // redraw now the page is visible, so the boxes show the real values
+    // <<< END CHANGED (1)
 });
 
 function openPopup(text){
@@ -127,12 +132,12 @@ const MAX_EVENTS = 8;     // events picked per game, out of the 25 in EVENTS
 // ---- State
 let live, events, k, timer = null, hover = null;
 let pending = null, recov = [], schedule = [], deck = [], alertState = null, hideK = 0, lastHit = null;
-let cash = bank, holdings = STOCKS.map(() => 0);
+let cash = bank, holdings = dinos.map(d => d.total);   // >>> CHANGED (2): was STOCKS.map(() => 0). Dinos and STOCKS are in the same order.
 
 function reset() {
   stop();
   live = STOCKS.map(s => [s.start]);
-  cash = bank; holdings = STOCKS.map(() => 0);
+  cash = bank; holdings = dinos.map(d => d.total);   // >>> CHANGED (3): was STOCKS.map(() => 0), which threw away the player's starting dinos
   events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
   draw();
 }
@@ -223,11 +228,13 @@ function start() {
   const ms = 1000 / RES / Number(document.getElementById("speed").value);
   timer = setInterval(tick, ms);
   document.getElementById("go").textContent = "Pause";
+  renderTrade();   // >>> CHANGED (4): the game is running, so lock the buy/sell buttons
 }
 function stop() {
   clearInterval(timer); timer = null;
   document.getElementById("go").textContent = k >= LIVE ? "Finished" : (k > 0 ? "Resume" : "Start");
   document.getElementById("go").disabled = k >= LIVE;
+  renderTrade();   // >>> CHANGED (5): the game is paused, so unlock the buy/sell buttons
 }
 
 // ---- Drawing
@@ -294,11 +301,17 @@ function draw() {
   document.getElementById("clock").textContent = "Day " + simDay(k) + " of " + SIM_DAYS + "  (" + mmss(secs(k)) + " / " + mmss(secs(LIVE)) + ")";
   updateBoxes();
   renderLegend();
+  renderTrade();   // >>> CHANGED (6): keep the buy/sell prices, owned counts and button states up to date
+}
+
+// >>> CHANGED (7): portfolio value now comes from one helper: shares owned of each stock x that stock's current price
+function portfolioValue() {
+  return holdings.reduce((sum, n, i) => sum + n * live[i][k], 0);
 }
 
 // Bank = cash on hand. Portfolio value = shares owned x current price, added up across all six stocks.
 function updateBoxes() {
-  const value = holdings.reduce((sum, n, i) => sum + n * live[i][k], 0);
+  const value = portfolioValue();   // >>> CHANGED (7): was an inline holdings.reduce(...)
   document.getElementById("bank").textContent = money(cash);
   document.getElementById("portfolio").textContent = money(value);
 }
@@ -315,6 +328,87 @@ function renderLegend() {
     el.appendChild(d);
   });
 }
+
+// >>> CHANGED (8): NEW buy/sell feature ------------------------------------------------------
+// The panel is built here in JavaScript and placed under the row of stock boxes, so no HTML edit is needed.
+
+// Buy or sell ONE share of stock i at its current price. Only works while the game is paused.
+function trade(i, side) {
+  if (timer || k >= LIVE) return;              // game running or finished: no trading
+  const price = live[i][k];
+  if (side === "buy") {
+    if (cash < price) return;                  // not enough money in the bank: the buy is refused
+    cash -= price;                             // pay for the share...
+    holdings[i]++;                             // ...and own one more
+  } else {
+    if (holdings[i] < 1) return;               // nothing to sell
+    cash += price;                             // selling puts the money back in the bank
+    holdings[i]--;
+  }
+  dinos[i].total = holdings[i];                // keep the dino totals in step with what the player owns
+  bank = cash; updateBank();                   // the one shared bank value, so every bank display matches
+  draw();                                      // refreshes the Bank box, Portfolio box, legend and trade panel
+}
+
+const tradeStyle = document.createElement("style");
+tradeStyle.textContent = `
+  .trade { margin-top:12px; padding:12px; border:1px solid var(--grid,#ccc); border-radius:10px; background:var(--panel,#fff); overflow-x:auto; }
+  .trade h3 { margin:0 0 4px; font-size:1.05rem; }
+  .trade .note { margin:0 0 10px; color:var(--muted,#666); font-size:.9rem; }
+  .trade-row { display:grid; grid-template-columns:1.4fr 1.2fr .6fr 1.2fr auto auto; gap:8px; align-items:center;
+    padding:6px 0; border-top:1px solid var(--grid,#ddd); font-variant-numeric:tabular-nums; min-width:520px; }
+  .trade-row.head { border-top:0; color:var(--muted,#666); font-size:.85rem; }
+  .trade-row button { padding:6px 12px; }
+  .trade-row button:disabled { opacity:.4; cursor:not-allowed; }
+  .trade-total { margin-top:8px; padding-top:8px; border-top:1px solid var(--grid,#ddd); font-weight:700; }
+`;
+document.head.appendChild(tradeStyle);
+
+const tradePanel = document.createElement("div");
+tradePanel.className = "trade";
+tradePanel.innerHTML = `<h3>Buy and sell</h3><p class="note"></p>
+  <div class="trade-row head"><span>Stock</span><span>Price</span><span>Owned</span><span>Value owned</span><span></span><span></span></div>`;
+const tradeNote = tradePanel.querySelector(".note");
+
+const tradeRows = STOCKS.map((s, i) => {
+  const row = document.createElement("div");
+  row.className = "trade-row";
+  const name = document.createElement("span"), price = document.createElement("span");
+  const owned = document.createElement("span"), value = document.createElement("span");
+  const sell = document.createElement("button"), buy = document.createElement("button");
+  name.textContent = s.name;
+  name.style.borderLeft = `4px solid var(--c${i})`; name.style.paddingLeft = "8px";
+  sell.textContent = "Sell"; buy.textContent = "Buy";
+  sell.addEventListener("click", () => trade(i, "sell"));
+  buy.addEventListener("click", () => trade(i, "buy"));
+  row.append(name, price, owned, value, sell, buy);
+  tradePanel.appendChild(row);
+  return { price, owned, value, sell, buy };
+});
+
+const tradeTotal = document.createElement("div");
+tradeTotal.className = "trade-total";
+tradePanel.appendChild(tradeTotal);
+document.getElementById("legend").after(tradePanel);
+
+// Updates the panel. Buttons are only built once and then enabled/disabled, so clicks are never lost.
+function renderTrade() {
+  if (!live) return;                                   // first reset() runs before any prices exist
+  const canTrade = !timer && k < LIVE;                 // trading is only allowed while paused
+  tradeNote.textContent = k >= LIVE ? "The game is over, so trading is closed."
+    : timer ? "Pause the game to buy or sell."
+    : "Game paused: you can buy and sell. You can only buy if the bank can pay for it.";
+  tradeRows.forEach((r, i) => {
+    const p = live[i][k];
+    r.price.textContent = money(p);
+    r.owned.textContent = holdings[i];
+    r.value.textContent = money(holdings[i] * p);      // this stock's share of the portfolio
+    r.sell.disabled = !canTrade || holdings[i] < 1;    // can't sell what you don't own
+    r.buy.disabled = !canTrade || cash < p;            // can't buy without enough in the bank
+  });
+  tradeTotal.textContent = "Bank " + money(cash) + " + portfolio " + money(portfolioValue()) + " = total " + money(cash + portfolioValue());
+}
+// <<< END CHANGED (8) -------------------------------------------------------------------------
 
 // ---- Interaction
 canvas.addEventListener("mousemove", ev => {
