@@ -26,9 +26,6 @@ function closePopup(){
     document.getElementById('popup').style.display = 'none';
 }
 
-const minus_button = document.querySelectorAll(".minus");
-const add_button = document.querySelectorAll(".add");
-
 const dinos = [
     { name: "Lewis", total: 0 },
     { name: "Clara", total: 0 },
