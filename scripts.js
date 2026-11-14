@@ -1,7 +1,16 @@
-const startButton = document.getElementById("start");
-const game = document.getElementById("game");
+const startButton = document.getElementById("start"); //button from start page to dniosaur introduction
+const intros = document.getElementById("intro");
 
 startButton.addEventListener("click",function(){
     startButton.remove();
-    game.hidden = false;
+    intros.hidden = false;
+});
+
+const to_simulate = document.getElementById("to_trading"); //button from dinosaur intro to simulation
+const simulation = document.getElementById("simulation");
+
+to_simulate.addEventListener("click",function(){
+    to_simulate.remove();
+    simulation.hidden = false;
+    intros.hidden = true;
 });
