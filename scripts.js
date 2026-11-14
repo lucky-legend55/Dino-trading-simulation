@@ -87,7 +87,7 @@ dinos.forEach(function (dino, i) {
     box.append(label, minusBtn, totalText, plusBtn);
 });
 
-const MIN_P = 1, MAX_P = 2500, RES = 4, LIVE = 300 * RES, SIM_DAYS = 60;   // 300 seconds live stand in for 60 simulated days
+const MIN_P = 30, MAX_P = 2500, RES = 4, LIVE = 300 * RES, SIM_DAYS = 60;   // 300 seconds live stand in for 60 simulated days
 const simDay = j => Math.floor(j * SIM_DAYS / LIVE);   // one simulated day every 5 real seconds
 const secs = j => Math.floor(j / RES);                 // real seconds elapsed at tick j
 const clamp = p => Math.min(MAX_P, Math.max(MIN_P, p));
@@ -257,7 +257,7 @@ function draw() {
   const y = p => pad.t + (1 - (Math.log(p) - LOG_MIN) / LOG_RANGE) * (h - pad.t - pad.b);
 
   ctx.font = "12px Georgia, serif"; ctx.textBaseline = "middle";
-  [1, 3, 10, 30, 100, 300, 1000, 2500].forEach(p => {
+  [30, 50, 100, 200, 500, 1000, 2500].forEach(p => {
     ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad.l, y(p)); ctx.lineTo(w - pad.r, y(p)); ctx.stroke();
     ctx.fillStyle = css("--muted"); ctx.textAlign = "right"; ctx.fillText(p, pad.l - 6, y(p));
