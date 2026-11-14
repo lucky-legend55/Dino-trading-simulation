@@ -14,3 +14,12 @@ to_simulate.addEventListener("click",function(){
     simulation.hidden = false;
     intros.hidden = true;
 });
+
+function openPopup(text){
+    document.getElementById('popup-text').innerText = text;
+    document.getElementById('popup').style.display='flex';
+}
+
+function closePopup(){
+    document.getElementById('popup').style.display = 'none';
+}
