@@ -97,7 +97,7 @@ const STOCKS = [
   { id: 6, start: 400, vol: 0.006 }
 ];
 
-// ---- Random events: a pool of 25. Each game picks 12 of them at random. Changes are fractions (0.3 = +30%).
+// ---- Random events: a pool of 15. Each game picks 12 of them at random. Changes are fractions (0.3 = +30%).
 const EVENTS = [
   { id: 1,  name: "Earnings beat",           lo:  0.30, hi:  0.60 },
   { id: 2,  name: "Earnings miss",           lo: -0.60, hi: -0.30 },
