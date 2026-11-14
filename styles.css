@@ -1,21 +1,45 @@
-h1{display:flex;
-justify-content:center}
 
-
-.box{
-    border:2px solid black;
-    text-align: center;
-    height:300px;
-    width:300px;
-    box-sizing:border-box ;
+h1 {
+    display: flex;
+    justify-content: center;
 }
 
-button{display:flex;
-justify-content: center;}
+/* Keeps the hidden attribute working even when display is set elsewhere */
+[hidden] {
+    display: none !important;
+}
 
+button {
+    display: flex;
+    justify-content: center;
+}
+
+/* ---------- Dino grid (3 columns x 4 rows) ---------- */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 200px);     /* 3 columns */
+    grid-template-rows: 200px 40px 200px 40px;   /* rows 2 and 4 are shorter */
+    gap: 10px;
+}
+
+.box {
+    border: 2px solid black;
+    text-align: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* no width or height here, the grid sets the size */
+}
+
+.box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---------- Simulation screen ---------- */
 #bankscreen {
     display: flex;
-    justify-content: space-between;   /* #main on the far left, #sidebar on the far right */
+    justify-content: space-between;
     border: 10px solid black;
     height: 700px;
     margin: 15px;
@@ -27,7 +51,7 @@ justify-content: center;}
 #main {
     display: flex;
     gap: 10px;
-    align-items: flex-start;          /* top */
+    align-items: flex-start;
 }
 
 #main .box1 {
@@ -37,7 +61,7 @@ justify-content: center;}
 
 #sidebar {
     display: flex;
-    flex-direction: column;           /* 8 boxes in a vertical line */
+    flex-direction: column;
     gap: 10px;
     width: 150px;
 }
@@ -52,17 +76,7 @@ justify-content: center;}
     text-align: center;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(3, 300px);
-    gap: 10px;
-}
-
-.box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+/* ---------- Popup ---------- */
 .popup {
     position: fixed;
     top: 0;
@@ -75,6 +89,7 @@ justify-content: center;}
     align-items: center;
     z-index: 1000;
 }
+
 .popup-content {
     background: #fff;
     padding: 20px;
@@ -83,6 +98,7 @@ justify-content: center;}
     width: 80%;
     max-width: 600px;
 }
+
 .close-btn {
     cursor: pointer;
     background: red;
