@@ -22,6 +22,13 @@ to_simulate.addEventListener("click",function(){
     // <<< END CHANGED (1)
 });
 
+const finalButton = document.getElementById("finalscreen"); //button from start page to dniosaur introduction
+const finalslide = document.getElementById("finished");
+
+startButton.addEventListener("click",function(){
+    finalButtonButton.remove();
+    finished.hidden = false;
+});
 function openPopup(text){
     document.getElementById('popup-text').innerText = text;
     document.getElementById('popup').style.display='flex';
