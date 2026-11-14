@@ -89,47 +89,37 @@ const clamp = p => Math.min(MAX_P, Math.max(MIN_P, p));
 const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
 
 const STOCKS = [
-  { id: 1, start: 3,   vol: 0.005 },
-  { id: 2, start: 500, vol: 0.008 },
-  { id: 3, start: 12,  vol: 0.004 },
-  { id: 4, start: 200, vol: 0.007 },
-  { id: 5, start: 900, vol: 0.009 },
-  { id: 6, start: 400, vol: 0.006 }
+  { id: 1, name: "lewis", start: 3,   vol: 0.005 },
+  { id: 2, name: "clara",start: 500, vol: 0.008 },
+  { id: 3, name: "dino",start: 12,  vol: 0.004 },
+  { id: 4, name: "imogen",start: 200, vol: 0.007 },
+  { id: 5, name: "steve",start: 900, vol: 0.009 },
+  { id: 6, name: "mia",start: 400, vol: 0.006 }
 ];
 
 // ---- Random events: a pool of 15. Each game picks 12 of them at random. Changes are fractions (0.3 = +30%).
 const EVENTS = [
-  { id: 1,  name: "Earnings beat",           lo:  0.30, hi:  0.60 },
-  { id: 2,  name: "Earnings miss",           lo: -0.60, hi: -0.30 },
-  { id: 3,  name: "Product recall",          lo: -0.70, hi: -0.40 },
-  { id: 4,  name: "Major contract won",      lo:  0.40, hi:  0.80 },
-  { id: 5,  name: "CEO resigns",             lo: -0.50, hi: -0.30 },
-  { id: 6,  name: "Buyout rumour",           lo:  0.50, hi:  0.90 },
-  { id: 7,  name: "Regulatory fine",         lo: -0.40, hi: -0.20 },
-  { id: 8,  name: "New product launch",      lo:  0.25, hi:  0.50 },
-  { id: 9,  name: "Total crash",             lo: -0.95, hi: -0.80 },
-  { id: 10, name: "Fraud scandal",           lo: -0.90, hi: -0.60 },
-  { id: 11, name: "Moonshot rally",          lo:  0.80, hi:  1.50 },
-  { id: 12, name: "Bankruptcy filing",       lo: -0.97, hi: -0.90 },
-  { id: 13, name: "Factory fire",            lo: -0.45, hi: -0.25 },
-  { id: 14, name: "Data breach",             lo: -0.40, hi: -0.20 },
-  { id: 15, name: "Patent win",              lo:  0.30, hi:  0.60 },
-  { id: 16, name: "Celebrity endorsement",   lo:  0.20, hi:  0.45 },
-  { id: 17, name: "Short squeeze",           lo:  0.70, hi:  1.20 },
-  { id: 18, name: "Supply chain collapse",   lo: -0.55, hi: -0.35 },
-  { id: 19, name: "Lawsuit lost",            lo: -0.50, hi: -0.30 },
-  { id: 20, name: "Takeover bid",            lo:  0.60, hi:  1.00 },
-  { id: 21, name: "Analyst downgrade",       lo: -0.30, hi: -0.15 },
-  { id: 22, name: "Breakthrough discovery",  lo:  0.50, hi:  1.00 },
-  { id: 23, name: "Flash crash",             lo: -0.80, hi: -0.60 },
-  { id: 24, name: "Union strike",            lo: -0.35, hi: -0.20 },
-  { id: 25, name: "Government bailout",      lo:  0.40, hi:  0.80 }
+  { id: 1, stock: 1,  name: "",           lo:  0.30, hi:  0.60 },
+  { id: 2,  stock: 1, name:"Earnings miss",           lo: -0.60, hi: -0.30 },
+  { id: 3,  stock: 2, name:"Product recall",          lo: -0.70, hi: -0.40 },
+  { id: 4,  stock: 2, name:"Major contract won",      lo:  0.40, hi:  0.80 },
+  { id: 5,  stock: 3, name:"CEO resigns",             lo: -0.50, hi: -0.30 },
+  { id: 6,  stock: 3,name: "Buyout rumour",           lo:  0.50, hi:  0.90 },
+  { id: 7,  stock: 4,name: "Regulatory fine",         lo: -0.40, hi: -0.20 },
+  { id: 8,  stock: 4,name: "New product launch",      lo:  0.25, hi:  0.50 },
+  { id: 9,  stock: 4,name: "Total crash",             lo: -0.95, hi: -0.80 },
+  { id: 10, stock: 5,name: "Fraud scandal",           lo: -0.90, hi: -0.60 },
+  { id: 11, stock: 5,name: "Moonshot rally",          lo:  0.80, hi:  1.50 },
+  { id: 12, stock: 5,name: "Bankruptcy filing",       lo: -0.97, hi: -0.90 },
+  { id: 13, stock: 6,name: "Factory fire",            lo: -0.45, hi: -0.25 },
+  { id: 14, stock: 6,name: "Data breach",             lo: -0.40, hi: -0.20 },
+  { id: 15, stock: 6,name: "Patent win",              lo:  0.30, hi:  0.60 }
 ];
 const VOL_BOOST = 4;       // multiplies the everyday price wobble
 const WARN_SECS = 8;       // seconds of warning before an event hits (at 1x speed)
 const RECOVER_SECS = 15;   // how long the quick recovery after a drop takes
 const WARN_TICKS = WARN_SECS * RES;
-const MAX_EVENTS = 12;     // events picked per game, out of the 25 in EVENTS
+const MAX_EVENTS = 8;     // events picked per game, out of the 25 in EVENTS
 
 // ---- State
 let live, events, k, timer = null, hover = null;
@@ -153,8 +143,8 @@ function tick() {
   });
   if (!pending && alertState !== "hit" && schedule.length && k >= schedule[0]) {
     schedule.shift();
-    const si = Math.floor(Math.random() * STOCKS.length);       // which stock
     const ev = deck.shift();   // next of the 12 events picked for this game
+    const si = ev.stock - 1;  
     const pct = ev.lo + Math.random() * (ev.hi - ev.lo);
     pending = { si, ev, pct, hitK: k + WARN_TICKS };   // warn first, hit later
     alertState = "warn";
@@ -202,19 +192,19 @@ function updateAlert() {
   const el = document.getElementById("alert");
   const info = alertState === "warn" ? pending : lastHit;
   if (!alertState || !info) { el.classList.remove("show"); return; }
-  const good = info.pct >= 0, id = STOCKS[info.si].id;
+  const good = info.pct >= 0, id = STOCKS[info.si].name;
   const speed = Number(document.getElementById("speed").value);
   const title = document.getElementById("aTitle"), body = document.getElementById("aBody");
   const fill = document.getElementById("aFill"), btn = document.getElementById("aPause");
   el.className = "show " + (good ? "good" : "bad");
   if (alertState === "warn") {
     const left = Math.max(0, pending.hitK - k);
-    title.textContent = (good ? "Opportunity" : "Warning") + ": Stock " + id;
+    title.textContent = (good ? "Opportunity" : "Warning") + ": " + id;
     body.textContent = "Event " + info.ev.id + ", " + info.ev.name + ", is about to hit. Impact in " + Math.ceil(left / RES / speed) + "s.";
     fill.style.width = (left / WARN_TICKS * 100) + "%";
     btn.style.display = ""; btn.textContent = timer ? "Pause to react" : "Resume";
   } else {
-    title.textContent = info.ev.name + " hit Stock " + id;
+    title.textContent = info.ev.name + " hit " + id;
     body.textContent = (good ? "+" : "") + (info.pct * 100).toFixed(1) + "% (" + info.before.toFixed(2) + " to " + info.after.toFixed(2) + ")." +
       (info.target ? " Quick recovery under way, toward about " + info.target.toFixed(2) + "." : "");
     fill.style.width = (Math.max(0, hideK - k) / (4 * RES) * 100) + "%";
@@ -282,7 +272,7 @@ function draw() {
       .sort((a, b) => b.v - a.v);
     ctx.textBaseline = "middle";
     rows.forEach(r => { ctx.fillStyle = css("--c" + r.i); ctx.beginPath(); ctx.arc(hx, y(r.v), 4, 0, 7); ctx.fill(); });
-    const bw = 140, bh = 24 + rows.length * 18;
+    const bw = 190, bh = 24 + rows.length * 18;
     let bx = hx + 12; if (bx + bw > w - pad.r) bx = hx - 12 - bw;
     ctx.fillStyle = css("--panel"); ctx.strokeStyle = css("--grid");
     ctx.fillRect(bx, pad.t, bw, bh); ctx.strokeRect(bx, pad.t, bw, bh);
@@ -307,7 +297,7 @@ function renderLegend() {
     const p = live[i][k], pct = (p / s.start - 1) * 100;
     const d = document.createElement("div");
     d.className = "chip";
-    d.innerHTML = `<span class="sw" style="background:var(--c${i})"></span>${s.id}
+    d.innerHTML = `<span class="sw" style="background:var(--c${i})"></span>${s.name}
       <span>${p.toFixed(2)}</span><small class="${pct >= 0 ? "up" : "down"}">${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%</small>`;
     el.appendChild(d);
   });
