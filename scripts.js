@@ -104,21 +104,21 @@ const STOCKS = [
 
 // ---- Random events: a pool of 15. Each game picks 12 of them at random. Changes are fractions (0.3 = +30%).
 const EVENTS = [
-  { id: 1, stock: 1,  name: "",           lo:  0.30, hi:  0.60 },
-  { id: 2,  stock: 1, name:"Earnings miss",           lo: -0.60, hi: -0.30 },
-  { id: 3,  stock: 2, name:"Product recall",          lo: -0.70, hi: -0.40 },
-  { id: 4,  stock: 2, name:"Major contract won",      lo:  0.40, hi:  0.80 },
-  { id: 5,  stock: 3, name:"CEO resigns",             lo: -0.50, hi: -0.30 },
-  { id: 6,  stock: 3,name: "Buyout rumour",           lo:  0.50, hi:  0.90 },
-  { id: 7,  stock: 4,name: "Regulatory fine",         lo: -0.40, hi: -0.20 },
-  { id: 8,  stock: 4,name: "New product launch",      lo:  0.25, hi:  0.50 },
-  { id: 9,  stock: 4,name: "Total crash",             lo: -0.95, hi: -0.80 },
-  { id: 10, stock: 5,name: "Fraud scandal",           lo: -0.90, hi: -0.60 },
-  { id: 11, stock: 5,name: "Moonshot rally",          lo:  0.80, hi:  1.50 },
-  { id: 12, stock: 5,name: "Bankruptcy filing",       lo: -0.97, hi: -0.90 },
-  { id: 13, stock: 6,name: "Factory fire",            lo: -0.45, hi: -0.25 },
-  { id: 14, stock: 6,name: "Data breach",             lo: -0.40, hi: -0.20 },
-  { id: 15, stock: 6,name: "Patent win",              lo:  0.30, hi:  0.60 }
+  { id: 1, stock: 1,  name: "Lazy Lewis goes for a run",           lo:  0.30, hi:  0.60 },
+  { id: 2,  stock: 1, name:"Lazy Lewis has a full day scrolling",  lo: -0.60, hi: -0.30 },
+  { id: 3,  stock: 2, name:"Clara falls off a horse",          lo: -0.70, hi: -0.40 },
+  { id: 4,  stock: 2, name:"Clara wins a rodeo",      lo:  0.40, hi:  0.80 },
+  { id: 5,  stock: 3, name:"Durhack Dino eats all the pizza so no one else can have some",lo: -0.50, hi: -0.30 },
+  { id: 6,  stock: 3,name: "Durhack Dino gets crowned as ruler of the world", lo:  0.50, hi:  0.90 },
+  { id: 7,  stock: 4,name: "Imogen falls at the Oscars",         lo: -0.40, hi: -0.20 },
+  { id: 8,  stock: 4,name: "Imogen goes viral",      lo:  0.25, hi:  0.50 },
+  { id: 9,  stock: 4,name: "Imogen gets cancelled",             lo: -0.95, hi: -0.80 },
+  { id: 10, stock: 5,name: "Steve gets dropped from his Steve",           lo: -0.90, hi: -0.60 },
+  { id: 11, stock: 5,name: "Steve wins a race",          lo:  0.80, hi:  1.50 },
+  { id: 12, stock: 5,name: "Steve sabotages a team mate",       lo: -0.97, hi: -0.90 },
+  { id: 13, stock: 6,name: "Mia loses her voice",            lo: -0.45, hi: -0.25 },
+  { id: 14, stock: 6,name: "Mia sings for the royal family",             lo: 0.4, hi: 0.6 },
+  { id: 15, stock: 6,name: "Mia is seen with Lin Manuel-Miranda",              lo:  0.30, hi:  0.60 }
 ];
 const VOL_BOOST = 4;       // multiplies the everyday price wobble
 const WARN_SECS = 8;       // seconds of warning before an event hits (at 1x speed)
