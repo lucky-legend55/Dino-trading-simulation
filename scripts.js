@@ -1,60 +1,62 @@
-let bank = 10000
-const startButton = document.getElementById("start"); //button from start page to dniosaur introduction
+let bank = 10000;
+const startButton = document.getElementById("start");
 const intros = document.getElementById("intro");
 
-startButton.addEventListener("click",function(){
+startButton.addEventListener("click", function () {
     startButton.remove();
     intros.hidden = false;
-    const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
+    updateBank();
 });
 
-const to_simulate = document.getElementById("to_trading"); //button from dinosaur intro to simulation
+const to_simulate = document.getElementById("to_trading");
 const simulation = document.getElementById("simulation");
 
-to_simulate.addEventListener("click",function(){
+to_simulate.addEventListener("click", function () {
     to_simulate.remove();
     simulation.hidden = false;
     intros.hidden = true;
+    draw();   // the chart had 0 width while hidden, so redraw now
 });
 
-function openPopup(text){
-    document.getElementById('popup-text').innerText = text;
-    document.getElementById('popup').style.display='flex';
+function openPopup(text) {
+    document.getElementById("popup-text").innerText = text;
+    document.getElementById("popup").style.display = "flex";
+}
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
 }
 
-function closePopup(){
-    document.getElementById('popup').style.display = 'none';
-}
-
+// Same order as STOCKS below: dino i uses stock i
 const dinos = [
-    { name: "Lewis", total: 0, cost: 300},
-    { name: "Clara", total: 0, cost: 500 },
+    { name: "Lewis",        total: 0, cost: 300 },
+    { name: "Clara",        total: 0, cost: 500 },
     { name: "Durhack Dino", total: 0, cost: 1200 },
-    { name: "Imogen", total: 0, cost: 200 },
-    { name: "Steve", total: 0, cost: 900},
-    { name: "Mia", total: 0, cost: 400 }
+    { name: "Imogen",       total: 0, cost: 200 },
+    { name: "Steve",        total: 0, cost: 900 },
+    { name: "Mia",          total: 0, cost: 400 }
 ];
 
-function updateBank(){
+function updateBank() {
     const bankEl = document.getElementById("bankTotal");
     const introEl = document.getElementById("screen2bank");
     if (bankEl) bankEl.textContent = bank;
     if (introEl) introEl.textContent = `Bank: ${bank} Rocks`;
 }
-
 updateBank();
 
-const controlBoxes = document.querySelectorAll(".controls");
+const controlBoxes = document.querySelectorAll(".controls");   // this line was missing
 
 dinos.forEach(function (dino, i) {
-    const box = controlBoxes[i];          // the i-th controls box in the grid
-
+    const box = controlBoxes[i];
     const label = document.createElement("span");
+    const priceEl = document.createElement("span");
     const totalText = document.createElement("span");
     const minusBtn = document.createElement("button");
     const plusBtn = document.createElement("button");
 
-    label.textContent = dino.name + ": ";
+    label.textContent = dino.name + " (";
+    priceEl.textContent = dino.cost;
+    dino.priceEl = priceEl;
     totalText.textContent = dino.total;
     minusBtn.textContent = "-";
     plusBtn.textContent = "+";
@@ -64,81 +66,82 @@ dinos.forEach(function (dino, i) {
     minusBtn.addEventListener("click", function () {
         if (dino.total > 0) {
             dino.total--;
-            bank = bank + dino.cost;        // selling gives the money back
+            bank += dino.cost;
             totalText.textContent = dino.total;
             updateBank();
-            }
+        }
     });
-
     plusBtn.addEventListener("click", function () {
-        if (bank>=dino.cost){
+        if (bank >= dino.cost) {
             dino.total++;
-            bank= bank-dino.cost;
+            bank -= dino.cost;
             totalText.textContent = dino.total;
             updateBank();
         }
     });
 
-    box.append(label, minusBtn, totalText, plusBtn);
+    box.append(label, priceEl, document.createTextNode(") "), minusBtn, totalText, plusBtn);
 });
 
-const MIN_P = 1, MAX_P = 2500, RES = 4, LIVE = 300 * RES, SIM_DAYS = 60;   // 300 seconds live stand in for 60 simulated days
-const simDay = j => Math.floor(j * SIM_DAYS / LIVE);   // one simulated day every 5 real seconds
-const secs = j => Math.floor(j / RES);                 // real seconds elapsed at tick j
+// Keep dino prices equal to the chart prices
+function syncDinos() {
+    dinos.forEach((d, i) => {
+        d.cost = Math.max(1, Math.round(live[i][k]));
+        if (d.priceEl) d.priceEl.textContent = d.cost;
+    });
+}
+
+const MIN_P = 1, MAX_P = 2500, RES = 4, LIVE = 300 * RES, SIM_DAYS = 60;
+const simDay = j => Math.floor(j * SIM_DAYS / LIVE);
+const secs = j => Math.floor(j / RES);
 const clamp = p => Math.min(MAX_P, Math.max(MIN_P, p));
 const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
 
 const STOCKS = [
-  { id: 1, start: 3,   vol: 0.005 },
-  { id: 2, start: 500, vol: 0.008 },
-  { id: 3, start: 12,  vol: 0.004 },
-  { id: 4, start: 200, vol: 0.007 },
-  { id: 5, start: 900, vol: 0.009 },
-  { id: 6, start: 400, vol: 0.006 }
+  { id: 1, start: 3,   vol: 0.005 },   // Lewis
+  { id: 2, start: 500, vol: 0.008 },   // Clara
+  { id: 3, start: 12,  vol: 0.004 },   // Durhack Dino
+  { id: 4, start: 200, vol: 0.007 },   // Imogen
+  { id: 5, start: 900, vol: 0.009 },   // Steve
+  { id: 6, start: 400, vol: 0.006 }    // Mia
 ];
 
-// ---- Random events: a pool of 25. Each game picks 12 of them at random. Changes are fractions (0.3 = +30%).
+// ---- Event pool. target = a dino name, or "all". lo/hi = fractional change range (-0.3 = -30%).
+// Ids 1 and 15 hit every stock. Replace ids 2-14 with your own events if you have them.
 const EVENTS = [
-  { id: 1,  name: "Earnings beat",           lo:  0.30, hi:  0.60 },
-  { id: 2,  name: "Earnings miss",           lo: -0.60, hi: -0.30 },
-  { id: 3,  name: "Product recall",          lo: -0.70, hi: -0.40 },
-  { id: 4,  name: "Major contract won",      lo:  0.40, hi:  0.80 },
-  { id: 5,  name: "CEO resigns",             lo: -0.50, hi: -0.30 },
-  { id: 6,  name: "Buyout rumour",           lo:  0.50, hi:  0.90 },
-  { id: 7,  name: "Regulatory fine",         lo: -0.40, hi: -0.20 },
-  { id: 8,  name: "New product launch",      lo:  0.25, hi:  0.50 },
-  { id: 9,  name: "Total crash",             lo: -0.95, hi: -0.80 },
-  { id: 10, name: "Fraud scandal",           lo: -0.90, hi: -0.60 },
-  { id: 11, name: "Moonshot rally",          lo:  0.80, hi:  1.50 },
-  { id: 12, name: "Bankruptcy filing",       lo: -0.97, hi: -0.90 },
-  { id: 13, name: "Factory fire",            lo: -0.45, hi: -0.25 },
-  { id: 14, name: "Data breach",             lo: -0.40, hi: -0.20 },
-  { id: 15, name: "Patent win",              lo:  0.30, hi:  0.60 },
-  { id: 16, name: "Celebrity endorsement",   lo:  0.20, hi:  0.45 },
-  { id: 17, name: "Short squeeze",           lo:  0.70, hi:  1.20 },
-  { id: 18, name: "Supply chain collapse",   lo: -0.55, hi: -0.35 },
-  { id: 19, name: "Lawsuit lost",            lo: -0.50, hi: -0.30 },
-  { id: 20, name: "Takeover bid",            lo:  0.60, hi:  1.00 },
-  { id: 21, name: "Analyst downgrade",       lo: -0.30, hi: -0.15 },
-  { id: 22, name: "Breakthrough discovery",  lo:  0.50, hi:  1.00 },
-  { id: 23, name: "Flash crash",             lo: -0.80, hi: -0.60 },
-  { id: 24, name: "Union strike",            lo: -0.35, hi: -0.20 },
-  { id: 25, name: "Government bailout",      lo:  0.40, hi:  0.80 }
+  { id: 1,  name: "Market crash",           target: "all",          lo: -0.30, hi: -0.15 },
+  { id: 2,  name: "Lewis falls asleep",     target: "Lewis",        lo: -0.40, hi: -0.20 },
+  { id: 3,  name: "Clara wins a rodeo",     target: "Clara",        lo:  0.20, hi:  0.40 },
+  { id: 4,  name: "Durhack Dino goes viral",target: "Durhack Dino", lo:  0.20, hi:  0.35 },
+  { id: 5,  name: "Imogen loses followers", target: "Imogen",       lo: -0.25, hi: -0.10 },
+  { id: 6,  name: "Steve's team wins",      target: "Steve",        lo:  0.15, hi:  0.30 },
+  { id: 7,  name: "Mia's concert cancelled",target: "Mia",          lo: -0.35, hi: -0.15 },
+  { id: 8,  name: "Lewis wins a nap prize", target: "Lewis",        lo:  0.20, hi:  0.40 },
+  { id: 9,  name: "Clara's horse escapes",  target: "Clara",        lo: -0.30, hi: -0.10 },
+  { id: 10, name: "Durhack Dino scandal",   target: "Durhack Dino", lo: -0.40, hi: -0.20 },
+  { id: 11, name: "Imogen brand deal",      target: "Imogen",       lo:  0.20, hi:  0.40 },
+  { id: 12, name: "Steve injured",          target: "Steve",        lo: -0.30, hi: -0.15 },
+  { id: 13, name: "Mia's song hits #1",     target: "Mia",          lo:  0.25, hi:  0.45 },
+  { id: 14, name: "Clara opens a ranch",    target: "Clara",        lo:  0.10, hi:  0.25 },
+  { id: 15, name: "Market boom",            target: "all",          lo:  0.15, hi:  0.30 }
 ];
-const VOL_BOOST = 4;       // multiplies the everyday price wobble
-const WARN_SECS = 8;       // seconds of warning before an event hits (at 1x speed)
-const RECOVER_SECS = 15;   // how long the quick recovery after a drop takes
-const WARN_TICKS = WARN_SECS * RES;
-const MAX_EVENTS = 12;     // events picked per game, out of the 25 in EVENTS
 
-// ---- State
-let live, events, k, timer = null, hover = null;
+const VOL_BOOST = 4;
+const WARN_SECS = 8;
+const RECOVER_SECS = 15;
+const WARN_TICKS = WARN_SECS * RES;
+const MAX_EVENTS = Math.min(12, EVENTS.length);
+
+// ---- State (no variable called "events" any more)
+let live, k, timer = null, hover = null;
 let pending = null, recov = [], schedule = [], deck = [], alertState = null, hideK = 0, lastHit = null;
 
 function reset() {
   stop();
   live = STOCKS.map(s => [s.start]);
-  events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
+  k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents();
+  alertState = null; updateAlert();
+  syncDinos();
   draw();
 }
 
@@ -146,27 +149,28 @@ function tick() {
   k++;
   STOCKS.forEach((s, i) => {
     let p = live[i][k - 1] * (1 + s.vol * VOL_BOOST / Math.sqrt(RES) * gauss());
-    if (Math.random() < 0.01) p *= 1 + (Math.random() - 0.5) * 0.12;   // occasional small random jump (up to 6%)
-    const r = recov[i];                                   // quick recovery pulls the price back up
+    if (Math.random() < 0.01) p *= 1 + (Math.random() - 0.5) * 0.12;
+    const r = recov[i];
     if (r) { p += (r.target - p) * r.rate; if (--r.left <= 0) recov[i] = null; }
     live[i].push(clamp(p));
   });
-  if (!pending && alertState !== "hit" && schedule.length && k >= schedule[0]) {
+  if (!pending && alertState !== "hit" && schedule.length && deck.length && k >= schedule[0]) {
     schedule.shift();
-    const si = Math.floor(Math.random() * STOCKS.length);       // which stock
-    const ev = deck.shift();   // next of the 12 events picked for this game
+    const ev = deck.shift();
+    const all = ev.target === "all";
+    const si = all ? -1 : dinos.findIndex(d => d.name === ev.target);   // the event's own dino
     const pct = ev.lo + Math.random() * (ev.hi - ev.lo);
-    pending = { si, ev, pct, hitK: k + WARN_TICKS };   // warn first, hit later
+    pending = { si, all, ev, pct, hitK: k + WARN_TICKS };
     alertState = "warn";
   }
   if (pending && k >= pending.hitK) hitEvent();
   else if (alertState === "hit" && k >= hideK) alertState = null;
   updateAlert();
+  syncDinos();                         // dino prices follow the chart
   if (k >= LIVE) { stop(); setTimeout(() => { alertState = null; updateAlert(); }, 4000); }
   draw();
 }
 
-// Pick 12 different events at random from the pool of 25 (Fisher-Yates shuffle).
 function pickEvents() {
   const pool = EVENTS.slice();
   for (let i = pool.length - 1; i > 0; i--) {
@@ -176,7 +180,6 @@ function pickEvents() {
   return pool.slice(0, MAX_EVENTS);
 }
 
-// Spread the big events across the game at random times, with room for each warning.
 function makeSchedule() {
   const margin = 10 * RES, tail = 4 * RES;
   const slot = (LIVE - margin - WARN_TICKS - tail) / MAX_EVENTS;
@@ -185,16 +188,20 @@ function makeSchedule() {
 }
 
 function hitEvent() {
-  const { si, ev, pct } = pending;
-  const before = live[si][k], after = clamp(before * (1 + pct));
-  live[si][k] = after;
-  let target = null;
-  if (pct < 0) {                                  // quick recovery: win back 50-90% of the loss
-    target = after + (before - after) * (0.5 + Math.random() * 0.4);
-    const left = RECOVER_SECS * RES;
-    recov[si] = { target, left, rate: 1 - Math.pow(0.1, 1 / left) };
-  }
-  lastHit = { si, ev, pct, before, after, target };
+  const { si, all, ev, pct } = pending;
+  const targets = all ? STOCKS.map((_, i) => i) : [si];
+  let before = 0, after = 0, target = null;
+  targets.forEach(i => {
+    before = live[i][k];
+    after = clamp(before * (1 + pct));
+    live[i][k] = after;
+    if (pct < 0) {                    // quick recovery: win back 50-90% of the loss
+      target = after + (before - after) * (0.5 + Math.random() * 0.4);
+      const left = RECOVER_SECS * RES;
+      recov[i] = { target, left, rate: 1 - Math.pow(0.1, 1 / left) };
+    }
+  });
+  lastHit = { si, all, ev, pct, before, after, target };
   pending = null; alertState = "hit"; hideK = k + 4 * RES;
 }
 
@@ -202,21 +209,23 @@ function updateAlert() {
   const el = document.getElementById("alert");
   const info = alertState === "warn" ? pending : lastHit;
   if (!alertState || !info) { el.classList.remove("show"); return; }
-  const good = info.pct >= 0, id = STOCKS[info.si].id;
+  const good = info.pct >= 0;
+  const who = info.all ? "All stocks" : dinos[info.si].name;
   const speed = Number(document.getElementById("speed").value);
   const title = document.getElementById("aTitle"), body = document.getElementById("aBody");
   const fill = document.getElementById("aFill"), btn = document.getElementById("aPause");
   el.className = "show " + (good ? "good" : "bad");
   if (alertState === "warn") {
     const left = Math.max(0, pending.hitK - k);
-    title.textContent = (good ? "Opportunity" : "Warning") + ": Stock " + id;
-    body.textContent = "Event " + info.ev.id + ", " + info.ev.name + ", is about to hit. Impact in " + Math.ceil(left / RES / speed) + "s.";
+    title.textContent = (good ? "Opportunity" : "Warning") + ": " + who;
+    body.textContent = info.ev.name + " is about to hit. Impact in " + Math.ceil(left / RES / speed) + "s.";
     fill.style.width = (left / WARN_TICKS * 100) + "%";
     btn.style.display = ""; btn.textContent = timer ? "Pause to react" : "Resume";
   } else {
-    title.textContent = info.ev.name + " hit Stock " + id;
-    body.textContent = (good ? "+" : "") + (info.pct * 100).toFixed(1) + "% (" + info.before.toFixed(2) + " to " + info.after.toFixed(2) + ")." +
-      (info.target ? " Quick recovery under way, toward about " + info.target.toFixed(2) + "." : "");
+    title.textContent = info.ev.name + ": " + who;
+    body.textContent = (good ? "+" : "") + (info.pct * 100).toFixed(1) + "%" +
+      (info.all ? " on every dino." : " (" + info.before.toFixed(2) + " to " + info.after.toFixed(2) + ").") +
+      (info.target ? " Quick recovery under way." : "");
     fill.style.width = (Math.max(0, hideK - k) / (4 * RES) * 100) + "%";
     btn.style.display = "none";
   }
@@ -234,7 +243,6 @@ function stop() {
   document.getElementById("go").textContent = k >= LIVE ? "Finished" : (k > 0 ? "Resume" : "Start");
   document.getElementById("go").disabled = k >= LIVE;
 }
-
 // ---- Drawing
 const canvas = document.getElementById("chart");
 const ctx = canvas.getContext("2d");
