@@ -119,15 +119,20 @@ const VOL_BOOST = 4;       // multiplies the everyday price wobble
 const WARN_SECS = 8;       // seconds of warning before an event hits (at 1x speed)
 const RECOVER_SECS = 15;   // how long the quick recovery after a drop takes
 const WARN_TICKS = WARN_SECS * RES;
+//const START_CASH = bank;   // the player's starting bank
+const CUR = "Rocks";            // currency symbol shown in the boxes
+const money = n => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + CUR;
 const MAX_EVENTS = 8;     // events picked per game, out of the 25 in EVENTS
 
 // ---- State
 let live, events, k, timer = null, hover = null;
 let pending = null, recov = [], schedule = [], deck = [], alertState = null, hideK = 0, lastHit = null;
+let cash = bank, holdings = STOCKS.map(() => 0);
 
 function reset() {
   stop();
   live = STOCKS.map(s => [s.start]);
+  cash = bank; holdings = STOCKS.map(() => 0);
   events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
   draw();
 }
@@ -287,7 +292,15 @@ function draw() {
   }
   canvas._m = { pad, inner };
   document.getElementById("clock").textContent = "Day " + simDay(k) + " of " + SIM_DAYS + "  (" + mmss(secs(k)) + " / " + mmss(secs(LIVE)) + ")";
+  updateBoxes();
   renderLegend();
+}
+
+// Bank = cash on hand. Portfolio value = shares owned x current price, added up across all six stocks.
+function updateBoxes() {
+  const value = holdings.reduce((sum, n, i) => sum + n * live[i][k], 0);
+  document.getElementById("bank").textContent = money(cash);
+  document.getElementById("portfolio").textContent = money(value);
 }
 
 function renderLegend() {

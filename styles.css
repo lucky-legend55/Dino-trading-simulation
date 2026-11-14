@@ -39,6 +39,10 @@
   .sw { width:14px; height:4px; border-radius:2px; flex:none; }
   .chip small { margin-left:auto; }
   .up { color:var(--good); } .down { color:var(--bad); }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .stat { background:var(--panel); border:1px solid var(--grid); border-radius:10px; padding:12px 14px; }
+  .stat span { display:block; color:var(--muted); font-size:.85rem; }
+  .stat b { font-size:1.6rem; font-variant-numeric: tabular-nums; }
   .t { color:var(--muted); font-variant-numeric: tabular-nums; margin-right:8px; }
   #alert { position:fixed; z-index:20; top:calc(12px + env(safe-area-inset-top, 0px)); left:50%;
     transform:translate(-50%, -200%); width:min(520px, calc(100% - 24px)); padding:14px 16px;
