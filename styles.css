@@ -20,7 +20,7 @@ justify-content: center;}
     display: flex;
     justify-content: space-between;   /* #main on the far left, #sidebar on the far right */
     border: 10px solid black;
-    height: 600px;
+    height: 700px;
     margin: 15px;
     border-radius: 8px;
     padding: 10px;
