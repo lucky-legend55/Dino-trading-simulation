@@ -26,9 +26,9 @@ const finalButton = document.getElementById("finalscreen"); //button from start 
 const finalslide = document.getElementById("finished");
 
 finalButton.addEventListener("click",function(){
-    finalButtonButton.remove();
+    finalButton.remove();
     simulation.hidden = true
-    finished.hidden = false;
+    finalslide.hidden = false;
 });
 function openPopup(text){
     document.getElementById('popup-text').innerText = text;
