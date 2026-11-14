@@ -89,9 +89,9 @@ const clamp = p => Math.min(MAX_P, Math.max(MIN_P, p));
 const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
 
 const STOCKS = [
-  { id: 1, name: "lewis", start: 3,   vol: 0.005 },
+  { id: 1, name: "lewis", start: 300,   vol: 0.005 },
   { id: 2, name: "clara",start: 500, vol: 0.008 },
-  { id: 3, name: "dino",start: 12,  vol: 0.004 },
+  { id: 3, name: "dino",start: 1200,  vol: 0.004 },
   { id: 4, name: "imogen",start: 200, vol: 0.007 },
   { id: 5, name: "steve",start: 900, vol: 0.009 },
   { id: 6, name: "mia",start: 400, vol: 0.006 }
