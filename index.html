@@ -55,13 +55,22 @@
 
         </div>
         <div id="simulation" hidden>
-            <div class="wrap">
-                <h1>Six fake stocks</h1>
-                <p class="sub">Each line is the % change since day 1. Hover to compare, click a name to hide or show it.</p>
+            <div id="alert" role="alert" aria-live="assertive">
+                <strong id="aTitle"></strong>
+                <p id="aBody"></p>
+                <div id="aBar"><i id="aFill"></i></div>
+                <button id="aPause" type="button"></button>
+                </div>
+                <div class="wrap">
+                <h1>Stock game</h1>
+                <p class="sub">Five minutes live that stand in for two months (one simulated day every 5 seconds). Price axis is logarithmic, from 1 to 2500.</p>
                 <div class="panel"><canvas id="chart"></canvas></div>
+                <div class="bar">
+                    <button id="go">Start</button>
+                    <label>Speed <select id="speed"><option value="1">1x</option><option value="5">5x</option><option value="20">20x</option></select></label>
+                    <span id="clock"></span>
+                </div>
                 <div class="legend" id="legend"></div>
-                <div class="controls"><button class="act" id="regen">Generate new history</button></div>
-            </div>
             <!--<div id="bankscreen">
                 <div id="main">
                     <div class="box1">Bank</div>

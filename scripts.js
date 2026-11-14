@@ -82,33 +82,165 @@ dinos.forEach(function (dino, i) {
     box.append(label, minusBtn, totalText, plusBtn);
 });
 
+const MIN_P = 1, MAX_P = 2500, RES = 4, LIVE = 300 * RES, SIM_DAYS = 60;   // 300 seconds live stand in for 60 simulated days
+const simDay = j => Math.floor(j * SIM_DAYS / LIVE);   // one simulated day every 5 real seconds
+const secs = j => Math.floor(j / RES);                 // real seconds elapsed at tick j
+const clamp = p => Math.min(MAX_P, Math.max(MIN_P, p));
+const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+
 const STOCKS = [
-  { name: "ACME",  drift: 0.0006, vol: 0.015 },
-  { name: "BOLT",  drift: 0.0003, vol: 0.028 },
-  { name: "CRUX",  drift: 0.0008, vol: 0.020 },
-  { name: "DELTA", drift: 0.0000, vol: 0.012 },
-  { name: "ECHO",  drift: -0.0003, vol: 0.025 },
-  { name: "FLUX",  drift: 0.0005, vol: 0.035 }
+  { id: 1, start: 3,   vol: 0.005 },
+  { id: 2, start: 500, vol: 0.008 },
+  { id: 3, start: 12,  vol: 0.004 },
+  { id: 4, start: 200, vol: 0.007 },
+  { id: 5, start: 900, vol: 0.009 },
+  { id: 6, start: 400, vol: 0.006 }
 ];
-const DAYS = 250;
 
-function gauss() {
-  const u = 1 - Math.random(), v = Math.random();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-function walk(s) {
-  const p = [100];
-  for (let i = 1; i < DAYS; i++) p.push(Math.max(1, p[i-1] * (1 + s.drift + s.vol * gauss())));
-  return p;
+// ---- Random events: a pool of 25. Each game picks 12 of them at random. Changes are fractions (0.3 = +30%).
+const EVENTS = [
+  { id: 1,  name: "Earnings beat",           lo:  0.30, hi:  0.60 },
+  { id: 2,  name: "Earnings miss",           lo: -0.60, hi: -0.30 },
+  { id: 3,  name: "Product recall",          lo: -0.70, hi: -0.40 },
+  { id: 4,  name: "Major contract won",      lo:  0.40, hi:  0.80 },
+  { id: 5,  name: "CEO resigns",             lo: -0.50, hi: -0.30 },
+  { id: 6,  name: "Buyout rumour",           lo:  0.50, hi:  0.90 },
+  { id: 7,  name: "Regulatory fine",         lo: -0.40, hi: -0.20 },
+  { id: 8,  name: "New product launch",      lo:  0.25, hi:  0.50 },
+  { id: 9,  name: "Total crash",             lo: -0.95, hi: -0.80 },
+  { id: 10, name: "Fraud scandal",           lo: -0.90, hi: -0.60 },
+  { id: 11, name: "Moonshot rally",          lo:  0.80, hi:  1.50 },
+  { id: 12, name: "Bankruptcy filing",       lo: -0.97, hi: -0.90 },
+  { id: 13, name: "Factory fire",            lo: -0.45, hi: -0.25 },
+  { id: 14, name: "Data breach",             lo: -0.40, hi: -0.20 },
+  { id: 15, name: "Patent win",              lo:  0.30, hi:  0.60 },
+  { id: 16, name: "Celebrity endorsement",   lo:  0.20, hi:  0.45 },
+  { id: 17, name: "Short squeeze",           lo:  0.70, hi:  1.20 },
+  { id: 18, name: "Supply chain collapse",   lo: -0.55, hi: -0.35 },
+  { id: 19, name: "Lawsuit lost",            lo: -0.50, hi: -0.30 },
+  { id: 20, name: "Takeover bid",            lo:  0.60, hi:  1.00 },
+  { id: 21, name: "Analyst downgrade",       lo: -0.30, hi: -0.15 },
+  { id: 22, name: "Breakthrough discovery",  lo:  0.50, hi:  1.00 },
+  { id: 23, name: "Flash crash",             lo: -0.80, hi: -0.60 },
+  { id: 24, name: "Union strike",            lo: -0.35, hi: -0.20 },
+  { id: 25, name: "Government bailout",      lo:  0.40, hi:  0.80 }
+];
+const VOL_BOOST = 4;       // multiplies the everyday price wobble
+const WARN_SECS = 8;       // seconds of warning before an event hits (at 1x speed)
+const RECOVER_SECS = 15;   // how long the quick recovery after a drop takes
+const WARN_TICKS = WARN_SECS * RES;
+const MAX_EVENTS = 12;     // events picked per game, out of the 25 in EVENTS
+
+// ---- State
+let live, events, k, timer = null, hover = null;
+let pending = null, recov = [], schedule = [], deck = [], alertState = null, hideK = 0, lastHit = null;
+
+function reset() {
+  stop();
+  live = STOCKS.map(s => [s.start]);
+  events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
+  draw();
 }
 
+function tick() {
+  k++;
+  STOCKS.forEach((s, i) => {
+    let p = live[i][k - 1] * (1 + s.vol * VOL_BOOST / Math.sqrt(RES) * gauss());
+    if (Math.random() < 0.01) p *= 1 + (Math.random() - 0.5) * 0.12;   // occasional small random jump (up to 6%)
+    const r = recov[i];                                   // quick recovery pulls the price back up
+    if (r) { p += (r.target - p) * r.rate; if (--r.left <= 0) recov[i] = null; }
+    live[i].push(clamp(p));
+  });
+  if (!pending && alertState !== "hit" && schedule.length && k >= schedule[0]) {
+    schedule.shift();
+    const si = Math.floor(Math.random() * STOCKS.length);       // which stock
+    const ev = deck.shift();   // next of the 12 events picked for this game
+    const pct = ev.lo + Math.random() * (ev.hi - ev.lo);
+    pending = { si, ev, pct, hitK: k + WARN_TICKS };   // warn first, hit later
+    alertState = "warn";
+  }
+  if (pending && k >= pending.hitK) hitEvent();
+  else if (alertState === "hit" && k >= hideK) alertState = null;
+  updateAlert();
+  if (k >= LIVE) { stop(); setTimeout(() => { alertState = null; updateAlert(); }, 4000); }
+  draw();
+}
+
+// Pick 12 different events at random from the pool of 25 (Fisher-Yates shuffle).
+function pickEvents() {
+  const pool = EVENTS.slice();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, MAX_EVENTS);
+}
+
+// Spread the big events across the game at random times, with room for each warning.
+function makeSchedule() {
+  const margin = 10 * RES, tail = 4 * RES;
+  const slot = (LIVE - margin - WARN_TICKS - tail) / MAX_EVENTS;
+  const room = Math.max(0, slot - WARN_TICKS - tail);
+  return Array.from({ length: MAX_EVENTS }, (_, i) => Math.floor(margin + i * slot + Math.random() * room));
+}
+
+function hitEvent() {
+  const { si, ev, pct } = pending;
+  const before = live[si][k], after = clamp(before * (1 + pct));
+  live[si][k] = after;
+  let target = null;
+  if (pct < 0) {                                  // quick recovery: win back 50-90% of the loss
+    target = after + (before - after) * (0.5 + Math.random() * 0.4);
+    const left = RECOVER_SECS * RES;
+    recov[si] = { target, left, rate: 1 - Math.pow(0.1, 1 / left) };
+  }
+  lastHit = { si, ev, pct, before, after, target };
+  pending = null; alertState = "hit"; hideK = k + 4 * RES;
+}
+
+function updateAlert() {
+  const el = document.getElementById("alert");
+  const info = alertState === "warn" ? pending : lastHit;
+  if (!alertState || !info) { el.classList.remove("show"); return; }
+  const good = info.pct >= 0, id = STOCKS[info.si].id;
+  const speed = Number(document.getElementById("speed").value);
+  const title = document.getElementById("aTitle"), body = document.getElementById("aBody");
+  const fill = document.getElementById("aFill"), btn = document.getElementById("aPause");
+  el.className = "show " + (good ? "good" : "bad");
+  if (alertState === "warn") {
+    const left = Math.max(0, pending.hitK - k);
+    title.textContent = (good ? "Opportunity" : "Warning") + ": Stock " + id;
+    body.textContent = "Event " + info.ev.id + ", " + info.ev.name + ", is about to hit. Impact in " + Math.ceil(left / RES / speed) + "s.";
+    fill.style.width = (left / WARN_TICKS * 100) + "%";
+    btn.style.display = ""; btn.textContent = timer ? "Pause to react" : "Resume";
+  } else {
+    title.textContent = info.ev.name + " hit Stock " + id;
+    body.textContent = (good ? "+" : "") + (info.pct * 100).toFixed(1) + "% (" + info.before.toFixed(2) + " to " + info.after.toFixed(2) + ")." +
+      (info.target ? " Quick recovery under way, toward about " + info.target.toFixed(2) + "." : "");
+    fill.style.width = (Math.max(0, hideK - k) / (4 * RES) * 100) + "%";
+    btn.style.display = "none";
+  }
+}
+document.getElementById("aPause").onclick = () => { timer ? stop() : start(); updateAlert(); };
+
+function start() {
+  if (k >= LIVE) return;
+  const ms = 1000 / RES / Number(document.getElementById("speed").value);
+  timer = setInterval(tick, ms);
+  document.getElementById("go").textContent = "Pause";
+}
+function stop() {
+  clearInterval(timer); timer = null;
+  document.getElementById("go").textContent = k >= LIVE ? "Finished" : (k > 0 ? "Resume" : "Start");
+  document.getElementById("go").disabled = k >= LIVE;
+}
+
+// ---- Drawing
 const canvas = document.getElementById("chart");
 const ctx = canvas.getContext("2d");
-let series = STOCKS.map(walk);
-let visible = STOCKS.map(() => true);
-let hover = null;
-
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const mmss = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+const LOG_MIN = Math.log(MIN_P), LOG_RANGE = Math.log(MAX_P) - LOG_MIN;
 
 function draw() {
   const dpr = window.devicePixelRatio || 1;
@@ -117,87 +249,80 @@ function draw() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
 
-  const pad = { l: 50, r: 12, t: 12, b: 24 };
-  const shown = series.filter((_, i) => visible[i]);
-  const all = (shown.length ? shown : series).flat();
-  const min = Math.min(...all) * 0.97, max = Math.max(...all) * 1.03;
-  const x = i => pad.l + (i / (DAYS - 1)) * (w - pad.l - pad.r);
-  const y = p => pad.t + (1 - (p - min) / (max - min)) * (h - pad.t - pad.b);
+  const pad = { l: 50, r: 12, t: 12, b: 26 };
+  const inner = w - pad.l - pad.r;
+  const xl = j => pad.l + (j / LIVE) * inner;
+  const y = p => pad.t + (1 - (Math.log(p) - LOG_MIN) / LOG_RANGE) * (h - pad.t - pad.b);
 
   ctx.font = "12px Georgia, serif"; ctx.textBaseline = "middle";
-  for (let g = 0; g <= 4; g++) {
-    const p = min + (max - min) * g / 4, gy = y(p);
+  [1, 3, 10, 30, 100, 300, 1000, 2500].forEach(p => {
     ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(w - pad.r, gy); ctx.stroke();
-    ctx.fillStyle = css("--muted"); ctx.textAlign = "right";
-    ctx.fillText(p.toFixed(0), pad.l - 6, gy);
-  }
-  // baseline at 100 (the starting value)
-  if (100 > min && 100 < max) {
-    ctx.strokeStyle = css("--muted"); ctx.setLineDash([3, 5]);
-    ctx.beginPath(); ctx.moveTo(pad.l, y(100)); ctx.lineTo(w - pad.r, y(100)); ctx.stroke();
-    ctx.setLineDash([]);
-  }
+    ctx.beginPath(); ctx.moveTo(pad.l, y(p)); ctx.lineTo(w - pad.r, y(p)); ctx.stroke();
+    ctx.fillStyle = css("--muted"); ctx.textAlign = "right"; ctx.fillText(p, pad.l - 6, y(p));
+  });
 
-  series.forEach((p, s) => {
-    if (!visible[s]) return;
-    ctx.strokeStyle = css("--c" + s); ctx.lineWidth = 2; ctx.lineJoin = "round";
+  // x labels
+  ctx.fillStyle = css("--muted"); ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";   ctx.fillText("Start", pad.l, h - 6);
+  ctx.textAlign = "center"; ctx.fillText("+1 month", xl(LIVE / 2), h - 6);
+  ctx.textAlign = "right";  ctx.fillText("+2 months", w - pad.r, h - 6);
+
+  STOCKS.forEach((s, i) => {
+    ctx.strokeStyle = css("--c" + i); ctx.lineWidth = 2; ctx.lineJoin = "round";
     ctx.beginPath();
-    p.forEach((v, i) => i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)));
+    live[i].forEach((v, j) => j ? ctx.lineTo(xl(j), y(v)) : ctx.moveTo(xl(j), y(v)));
     ctx.stroke();
   });
 
-  if (hover !== null) {
-    const hx = x(hover);
+  if (hover) {
+    const hx = xl(hover.k);
     ctx.strokeStyle = css("--muted"); ctx.setLineDash([4, 4]);
-    ctx.beginPath(); ctx.moveTo(hx, pad.t); ctx.lineTo(hx, h - pad.b); ctx.stroke();
-    ctx.setLineDash([]);
-    const rows = series.map((p, s) => ({ s, v: p[hover] })).filter(r => visible[r.s]).sort((a, b) => b.v - a.v);
-    rows.forEach(r => {
-      ctx.fillStyle = css("--c" + r.s);
-      ctx.beginPath(); ctx.arc(hx, y(r.v), 4, 0, 7); ctx.fill();
-    });
-    // tooltip box
-    const bw = 130, bh = 22 + rows.length * 18;
+    ctx.beginPath(); ctx.moveTo(hx, pad.t); ctx.lineTo(hx, h - pad.b); ctx.stroke(); ctx.setLineDash([]);
+    const rows = STOCKS.map((s, i) => ({ i, v: live[i][hover.k] }))
+      .sort((a, b) => b.v - a.v);
+    ctx.textBaseline = "middle";
+    rows.forEach(r => { ctx.fillStyle = css("--c" + r.i); ctx.beginPath(); ctx.arc(hx, y(r.v), 4, 0, 7); ctx.fill(); });
+    const bw = 140, bh = 24 + rows.length * 18;
     let bx = hx + 12; if (bx + bw > w - pad.r) bx = hx - 12 - bw;
     ctx.fillStyle = css("--panel"); ctx.strokeStyle = css("--grid");
     ctx.fillRect(bx, pad.t, bw, bh); ctx.strokeRect(bx, pad.t, bw, bh);
     ctx.textAlign = "left"; ctx.fillStyle = css("--muted");
-    ctx.fillText("Day " + (hover + 1), bx + 8, pad.t + 12);
-    rows.forEach((r, k) => {
-      const ty = pad.t + 30 + k * 18;
-      ctx.fillStyle = css("--c" + r.s); ctx.fillRect(bx + 8, ty - 2, 10, 4);
-      ctx.fillStyle = css("--text");
-      ctx.fillText(STOCKS[r.s].name, bx + 24, ty);
-      ctx.textAlign = "right"; ctx.fillText(r.v.toFixed(1), bx + bw - 8, ty); ctx.textAlign = "left";
+    ctx.fillText("Day " + simDay(hover.k) + " of " + SIM_DAYS, bx + 8, pad.t + 12);
+    rows.forEach((r, n) => {
+      const ty = pad.t + 32 + n * 18;
+      ctx.fillStyle = css("--c" + r.i); ctx.fillRect(bx + 8, ty - 2, 10, 4);
+      ctx.fillStyle = css("--text"); ctx.fillText("Stock " + STOCKS[r.i].id, bx + 24, ty);
+      ctx.textAlign = "right"; ctx.fillText(r.v.toFixed(2), bx + bw - 8, ty); ctx.textAlign = "left";
     });
   }
-  canvas._m = { pad, w };
+  canvas._m = { pad, inner };
+  document.getElementById("clock").textContent = "Day " + simDay(k) + " of " + SIM_DAYS + "  (" + mmss(secs(k)) + " / " + mmss(secs(LIVE)) + ")";
   renderLegend();
 }
 
 function renderLegend() {
   const el = document.getElementById("legend");
   el.innerHTML = "";
-  STOCKS.forEach((st, s) => {
-    const last = series[s][DAYS - 1], pct = last - 100;
-    const b = document.createElement("button");
-    b.className = "chip" + (visible[s] ? "" : " off");
-    b.setAttribute("aria-pressed", visible[s]);
-    b.innerHTML = `<span class="sw" style="background:var(--c${s})"></span>${st.name}
-      <b class="${pct >= 0 ? "up" : "down"}">${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%</b>`;
-    b.onclick = () => { visible[s] = !visible[s]; draw(); };
-    el.appendChild(b);
+  STOCKS.forEach((s, i) => {
+    const p = live[i][k], pct = (p / s.start - 1) * 100;
+    const d = document.createElement("div");
+    d.className = "chip";
+    d.innerHTML = `<span class="sw" style="background:var(--c${i})"></span>${s.id}
+      <span>${p.toFixed(2)}</span><small class="${pct >= 0 ? "up" : "down"}">${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%</small>`;
+    el.appendChild(d);
   });
 }
 
-canvas.addEventListener("mousemove", e => {
-  const r = canvas.getBoundingClientRect(), { pad, w } = canvas._m;
-  const t = (e.clientX - r.left - pad.l) / (w - pad.l - pad.r);
-  hover = Math.min(DAYS - 1, Math.max(0, Math.round(t * (DAYS - 1))));
+// ---- Interaction
+canvas.addEventListener("mousemove", ev => {
+  const r = canvas.getBoundingClientRect(), { pad, inner } = canvas._m;
+  const mx = ev.clientX - r.left - pad.l;
+  if (mx < 0) hover = null;
+  else hover = { k: Math.min(k, Math.round(mx / inner * LIVE)) };
   draw();
 });
 canvas.addEventListener("mouseleave", () => { hover = null; draw(); });
-document.getElementById("regen").onclick = () => { series = STOCKS.map(walk); draw(); };
+document.getElementById("go").onclick = () => { timer ? stop() : start(); updateAlert(); };
+document.getElementById("speed").onchange = () => { if (timer) { stop(); start(); } };
 window.addEventListener("resize", draw);
-draw();
+reset();
