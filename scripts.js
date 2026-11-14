@@ -1,4 +1,4 @@
-let bank = 100000
+let bank = 10000
 const startButton = document.getElementById("start"); //button from start page to dniosaur introduction
 const intros = document.getElementById("intro");
 
