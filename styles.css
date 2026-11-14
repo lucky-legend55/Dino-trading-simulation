@@ -12,3 +12,45 @@ justify-content:center}
     padding:150px;
     text-align: center;
 }
+
+button{display:flex;
+justify-content: center;}
+
+#bankscreen {
+    display: flex;
+    justify-content: space-between;   /* #main on the far left, #sidebar on the far right */
+    border: 10px solid black;
+    height: 600px;
+    margin: 15px;
+    border-radius: 8px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#main {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;          /* top */
+}
+
+#main .box1 {
+    width: 150px;
+    height: 100px;
+}
+
+#sidebar {
+    display: flex;
+    flex-direction: column;           /* 8 boxes in a vertical line */
+    gap: 10px;
+    width: 150px;
+}
+
+#sidebar .box1 {
+    flex: 1;
+}
+
+.box1 {
+    border: 2px solid black;
+    padding: 10px;
+    text-align: center;
+}
