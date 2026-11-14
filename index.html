@@ -55,7 +55,14 @@
 
         </div>
         <div id="simulation" hidden>
-            <div id="bankscreen">
+            <div class="wrap">
+                <h1>Six fake stocks</h1>
+                <p class="sub">Each line is the % change since day 1. Hover to compare, click a name to hide or show it.</p>
+                <div class="panel"><canvas id="chart"></canvas></div>
+                <div class="legend" id="legend"></div>
+                <div class="controls"><button class="act" id="regen">Generate new history</button></div>
+            </div>
+            <!--<div id="bankscreen">
                 <div id="main">
                     <div class="box1">Bank</div>
                     <div class="box1">Stocks</div>
@@ -68,7 +75,7 @@
                     <div class="box1">Steve</div>
                     <div class="box1">Mia</div>
                 </div>
-            </div>
+            </div>-->
         </div>
         <script src="scripts.js"></script> 
     </body>
