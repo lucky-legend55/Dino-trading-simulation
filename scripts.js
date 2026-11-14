@@ -25,8 +25,9 @@ to_simulate.addEventListener("click",function(){
 const finalButton = document.getElementById("finalscreen"); //button from start page to dniosaur introduction
 const finalslide = document.getElementById("finished");
 
-startButton.addEventListener("click",function(){
+finalButton.addEventListener("click",function(){
     finalButtonButton.remove();
+    simulation.hidden = true
     finished.hidden = false;
 });
 function openPopup(text){
