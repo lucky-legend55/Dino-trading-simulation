@@ -1,9 +1,11 @@
+let bank = 100000
 const startButton = document.getElementById("start"); //button from start page to dniosaur introduction
 const intros = document.getElementById("intro");
 
 startButton.addEventListener("click",function(){
     startButton.remove();
     intros.hidden = false;
+    const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
 });
 
 const to_simulate = document.getElementById("to_trading"); //button from dinosaur intro to simulation
@@ -23,3 +25,5 @@ function openPopup(text){
 function closePopup(){
     document.getElementById('popup').style.display = 'none';
 }
+
+
