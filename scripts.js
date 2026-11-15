@@ -17,15 +17,13 @@ startButton.addEventListener("click",function(){
 
 
 lessonButton.addEventListener("click",function(){
-    startButton.remove();
-    lessonButton.remove()
+    startscreen.hidden = true;
     learn.hidden = false;
 
 });
 
 
 learnButton.addEventListener("click",function(){
-    learnButton.remove();
     learn.hidden = true
     intros.hidden = false;
     const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
@@ -35,7 +33,7 @@ const to_simulate = document.getElementById("to_trading"); //button from dinosau
 const simulation = document.getElementById("simulation");
 
 to_simulate.addEventListener("click",function(){
-    to_simulate.remove();
+    //to_simulate.remove();
     simulation.hidden = false;
     intros.hidden = true;
     // >>> CHANGED (1): link the simulation to what the player chose on the intro screen
@@ -49,7 +47,6 @@ const finalButton = document.getElementById("finalscreen"); //button from start 
 const finalslide = document.getElementById("finished");
 
 finalButton.addEventListener("click",function(){
-    finalButton.remove();
     simulation.hidden = true;
     startscreen.hidden = false;
 });
@@ -144,7 +141,7 @@ const EVENTS = [
   { id: 7,  stock: 4,name: "Imogen falls at the Oscars",         lo: -0.40, hi: -0.20 },
   { id: 8,  stock: 4,name: "Imogen goes viral",      lo:  0.25, hi:  0.50 },
   { id: 9,  stock: 4,name: "Imogen gets cancelled",             lo: -0.95, hi: -0.80 },
-  { id: 10, stock: 5,name: "Steve gets dropped from his Steve",           lo: -0.90, hi: -0.60 },
+  { id: 10, stock: 5,name: "Steve gets dropped from his team",           lo: -0.90, hi: -0.60 },
   { id: 11, stock: 5,name: "Steve wins a race",          lo:  0.80, hi:  1.50 },
   { id: 12, stock: 5,name: "Steve sabotages a team mate",       lo: -0.97, hi: -0.90 },
   { id: 13, stock: 6,name: "Mia loses her voice",            lo: -0.45, hi: -0.25 },
