@@ -167,6 +167,8 @@ let cash = bank, holdings = dinos.map(d => d.total);   // >>> CHANGED (2): was S
 
 function reset() {
   stop();
+  tipsShown.clear(); 
+  hideTip();
   live = STOCKS.map(s => [s.start]);
   cash = bank; holdings = dinos.map(d => d.total);   // >>> CHANGED (3): was STOCKS.map(() => 0), which threw away the player's starting dinos
   events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
@@ -193,6 +195,7 @@ function tick() {
   if (pending && k >= pending.hitK) hitEvent();
   else if (alertState === "hit" && k >= hideK) alertState = null;
   updateAlert();
+  checkTips();
   if (k >= LIVE) { stop(); showResults(); setTimeout(() => { alertState = null; updateAlert(); }, 4000); }   // >>> NEW (B): show the results page when the game ends
   draw();
 }
@@ -574,6 +577,91 @@ function showResults() {
   close.addEventListener("click", () => overlay.remove());
   card.appendChild(close);
   document.body.appendChild(overlay);
+}
+
+// ===== Tutor tips during the game =====
+const TUTOR_IMG = "imgs/fulldino.jpg";   // use the same file as your lesson screen
+const TIP_COOLDOWN = 12000;              // ms between tips
+const TIP_SHOW_TIME = 9000;              // ms a tip stays on screen
+const tipsShown = new Set();
+let lastTipTime = 0, tipTimer = null;
+
+const tipStyle = document.createElement("style");
+tipStyle.textContent = `
+  .tip-tutor { position:fixed; left:16px; bottom:16px; z-index:15; display:none; align-items:flex-end; gap:10px;
+    max-width:min(420px, calc(100% - 32px)); }
+  .tip-tutor.show { display:flex; }
+  .tip-tutor img { width:90px; flex:none; }
+  .tip-bubble { position:relative; background:var(--panel,#fff); color:var(--text,#222); border:3px solid black;
+    border-radius:16px; padding:12px 14px; font-size:.95rem; }
+  .tip-bubble p { margin:0 0 6px; }
+  .tip-bubble button { padding:2px 10px; font-size:.85rem; }
+`;
+document.head.appendChild(tipStyle);
+
+const tipBox = document.createElement("div");
+tipBox.className = "tip-tutor";
+tipBox.innerHTML = `<img alt="Tutor dinosaur"><div class="tip-bubble"><p></p><button type="button">Got it</button></div>`;
+tipBox.querySelector("img").src = TUTOR_IMG;
+const tipText = tipBox.querySelector("p");
+tipBox.querySelector("button").addEventListener("click", hideTip);
+simulation.appendChild(tipBox);          // inside #simulation, so it only shows on the trading screen
+
+function hideTip() {
+  tipBox.classList.remove("show");
+  clearTimeout(tipTimer);
+}
+
+// Shows a tip once. Returns true if it was shown.
+function showTip(id, text) {
+  if (tipsShown.has(id)) return false;
+  if (Date.now() - lastTipTime < TIP_COOLDOWN) return false;
+  tipsShown.add(id);
+  lastTipTime = Date.now();
+  tipText.textContent = text;
+  tipBox.classList.add("show");
+  clearTimeout(tipTimer);
+  tipTimer = setTimeout(hideTip, TIP_SHOW_TIME);
+  return true;
+}
+
+function checkTips() {
+  const stockValues = holdings.map((n, i) => n * live[i][k]);
+  const invested = stockValues.reduce((a, b) => a + b, 0);
+  const total = cash + invested;
+
+  // 1. First few seconds: how trading works
+  if (k >= 2 && showTip("pause", "Tip: you can only buy and sell while the game is paused. Press Pause whenever you want to trade.")) return;
+
+  // 2. Warning about an event hitting a dino you own (or one you could profit from)
+  if (alertState === "warn" && pending) {
+    const name = dinos[pending.si].name;
+    const owned = holdings[pending.si] > 0;
+    if (pending.pct < 0 && owned && showTip("warnBad", "Bad news is coming for " + name + ", and you own some! Pause now and think about selling.")) return;
+    if (pending.pct >= 0 && !owned && showTip("warnGood", "Good news is coming for " + name + ". You don't own any, so pause and see if you can buy before it hits.")) return;
+  }
+
+  // 3. After a crash: recovery
+  if (alertState === "hit" && lastHit && lastHit.pct < 0 && lastHit.target &&
+      showTip("recover", "Prices often bounce back part of the way after a crash. Selling in a panic can lock in your loss.")) return;
+
+  // 4. Hasn't bought anything
+  if (k >= 20 * RES && invested === 0 &&
+      showTip("noBuy", "You haven't bought any dinos yet. Your bank won't grow on its own. Pause and buy one you think will rise.")) return;
+
+  // 5. Too much in one dino
+  if (invested > 0 && invested > 0.3 * total) {
+    const biggest = Math.max(...stockValues);
+    if (biggest / invested > 0.7 &&
+        showTip("oneDino", "Most of your money is in " + dinos[stockValues.indexOf(biggest)].name + ". If that dino crashes you lose a lot. Spreading money across dinos is safer.")) return;
+  }
+
+  // 6. Halfway check-in
+  if (k >= LIVE / 2) {
+    const pct = calcPercentChange(total);
+    showTip("half", "Halfway there! You're " + (pct >= 0 ? "up " : "down ") + Math.abs(pct).toFixed(1) + "% so far. " +
+      (pct >= 0 ? "Keep it up!" : "There's still time to recover."));
+  }
 }
 // <<< END NEW (C) -------------------------------------------------------------------------
 // ---- Interaction
