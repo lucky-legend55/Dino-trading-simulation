@@ -6,6 +6,7 @@ const intros = document.getElementById("intro");
 const lessonButton= document.getElementById("lesson");
 const learnButton= document.getElementById("learnbtn");
 const startscreen = document.getElementById("start_screen");
+let msgIndex = 0;
 
 startscreen.hidden = false
 
@@ -27,6 +28,7 @@ learnButton.addEventListener("click",function(){
     learn.hidden = true
     intros.hidden = false;
     const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
+    msgIndex = 0
 });
 
 const to_simulate = document.getElementById("to_trading"); //button from dinosaur intro to simulation
@@ -167,7 +169,7 @@ function reset() {
   tipsShown.clear(); 
   hideTip();
   live = STOCKS.map(s => [s.start]);
-  cash = bank; holdings = dinos.map(d => d.total);   // >>> CHANGED (3): was STOCKS.map(() => 0), which threw away the player's starting dinos
+  cash = bank; holdings = dinos.map(d => d.total);  
   events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
   draw();
 }
@@ -684,7 +686,7 @@ const messages = [
     "Get a high score within the top ten to get into the leaderboard!"
 ];
 
-let msgIndex = 0;
+
 const bubbleText = document.getElementById("bubble-text");
 const nextButton = document.getElementById("nextMsg");
 
