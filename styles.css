@@ -77,9 +77,10 @@ button {
 /* ---------- Dino grid (3 columns x 4 rows) ---------- */
 .grid {
     display: grid;
-    grid-template-columns: repeat(3, 200px);     /* 3 columns */
-    grid-template-rows: 200px 40px 200px 40px;   /* rows 2 and 4 are shorter */
+    grid-template-columns: repeat(3, 400px);     /* 3 columns */
+    grid-template-rows: 300px 40px 300px 40px;   /* rows 2 and 4 are shorter */
     gap: 10px;
+    justify-content: center;
 }
 
 .box {
@@ -131,9 +132,10 @@ button {
 }
 
 .box1 {
-    border: 2px solid black;
+    border: none;
     padding: 10px;
     text-align: center;
+    font-size: 32px;
 }
 
 /* ---------- Popup ---------- */
