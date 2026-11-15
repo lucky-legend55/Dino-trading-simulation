@@ -180,3 +180,11 @@ button {
     display: inline-block;
     width: 28px;
 }
+
+body.bg-start {
+    background-image: url("imgs/BackgroundDIno.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;   /* image stays put when scrolling */
+}
