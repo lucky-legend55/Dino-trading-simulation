@@ -190,3 +190,7 @@ body.bg-start {
     background-repeat: no-repeat;
     background-attachment: fixed;   /* image stays put when scrolling */
 }
+
+.sub{
+    font-weight: bold;
+}
