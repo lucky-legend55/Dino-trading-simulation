@@ -153,12 +153,37 @@ button {
 }
 
 .popup-content {
-    background: #fff;
+    background: var(--panel);      /* was #fff, which makes text unreadable in dark mode */
+    color: var(--text);
     padding: 20px;
     border-radius: 8px;
-    text-align: center;
     width: 80%;
-    max-width: 600px;
+    max-width: 800px;
+}
+
+.popup-content h2 {
+    text-align: center;            /* dinosaur name at the top */
+    margin: 0 0 15px;
+}
+
+.popup-body {
+    display: flex;                 /* description on the left, graph on the right */
+    gap: 20px;
+    text-align: left;
+}
+
+#popup-desc {
+    flex: 1;
+    margin: 0;
+}
+
+#popup-chart {
+    flex: 1;
+    min-width: 0;
+    width: 50%;
+    height: 220px;                 /* beats your global canvas { height: 400px } */
+    border: 1px solid var(--grid);
+    border-radius: 6px;
 }
 
 .close-btn {
@@ -168,7 +193,8 @@ button {
     border: none;
     padding: 10px 15px;
     border-radius: 5px;
-    margin-top: 10px;
+    margin: 15px auto 0;
+    display: block;
 }
 
 .controls {
