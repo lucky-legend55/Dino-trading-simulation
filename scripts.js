@@ -1,12 +1,22 @@
 let bank = 10000;
 const startButton = document.getElementById("start");
-const intros = document.getElementById("intro");
+const learn = document.getElementById("learn");
 
 startButton.addEventListener("click", function () {
     startButton.remove();
+    learn.hidden = false;
+    updateBank();
+});
+
+const learnButton = document.getElementById("after_learn");
+const intros = document.getElementById("intro");
+
+learnButton.addEventListener("click", function () {
+    learnButton.remove();
     intros.hidden = false;
     updateBank();
 });
+
 
 const to_simulate = document.getElementById("to_trading");
 const simulation = document.getElementById("simulation");
