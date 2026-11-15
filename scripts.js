@@ -51,9 +51,17 @@ finalButton.addEventListener("click",function(){
     simulation.hidden = true
     finalslide.hidden = false;
 });
-function openPopup(text){
-    document.getElementById('popup-text').innerText = text;
-    document.getElementById('popup').style.display='flex';
+function openPopup(i) {
+    popupIndex = i;
+    document.getElementById("popup-title").textContent = dinos[i].name;
+    document.getElementById("popup-desc").textContent = dinos[i].desc;
+
+    const img = document.getElementById("popup-img");
+    img.src = dinos[i].img;
+    img.alt = dinos[i].name;
+
+    document.getElementById("popup").style.display = "flex";
+    drawPopupChart();
 }
 
 function closePopup(){
@@ -61,12 +69,12 @@ function closePopup(){
 }
 
 const dinos = [
-    { name: "Lewis", total: 0, cost: 300},
-    { name: "Clara", total: 0, cost: 500 },
-    { name: "Durhack Dino", total: 0, cost: 1200 },
-    { name: "Imogen", total: 0, cost: 200 },
-    { name: "Steve", total: 0, cost: 900},
-    { name: "Mia", total: 0, cost: 400 }
+    { name: "Lewis", img:"imgs/lewisgraph.png", total: 0, cost: 300},
+    { name: "Clara", img:"imgs/claragraph.jpg",total: 0, cost: 500 },
+    { name: "Durhack Dino", img:"imgs/durhackdinograph.jpg", total: 0, cost: 1200 },
+    { name: "Imogen", img:"imgs/imogengraph.jpg", total: 0, cost: 200 },
+    { name: "Steve", img:"imgs/stevegraph.jpg",total: 0, cost: 900},
+    { name: "Mia", img:"imgs/miagraph.jpg",total: 0, cost: 400 }
 ];
 
 function updateBank(){
