@@ -324,7 +324,7 @@ function draw() {
     rows.forEach((r, n) => {
       const ty = pad.t + 32 + n * 18;
       ctx.fillStyle = css("--c" + r.i); ctx.fillRect(bx + 8, ty - 2, 10, 4);
-      ctx.fillStyle = css("--text"); ctx.fillText("Stock " + STOCKS[r.i].id, bx + 24, ty);
+      ctx.fillStyle = css("--text"); ctx.fillText(dinos[r.i].name, bx + 24, ty);
       ctx.textAlign = "right"; ctx.fillText(r.v.toFixed(2), bx + bw - 8, ty); ctx.textAlign = "left";
     });
   }
