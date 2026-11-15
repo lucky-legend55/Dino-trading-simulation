@@ -51,9 +51,10 @@ to_simulate.addEventListener("click",function(){
 const finalButton = document.getElementById("finalscreen"); //button from start page to dniosaur introduction
 const finalslide = document.getElementById("finished");
 
-finalButton.addEventListener("click",function(){
+finalButton.addEventListener("click", function () {
     simulation.hidden = true;
     startscreen.hidden = false;
+    resetGame();
 });
 function openPopup(text){
     document.getElementById('popup-text').innerText = text;
@@ -103,6 +104,7 @@ dinos.forEach(function (dino, i) {
 
     label.textContent = dino.name + ": ";
     totalText.textContent = dino.total;
+    dino.totalEl = totalText;          // NEW: lets resetGame() zero the number on screen
     minusBtn.textContent = "-";
     plusBtn.textContent = "+";
     minusBtn.className = "small-btn minus-btn";
@@ -184,6 +186,22 @@ function reset() {
   cash = bank; holdings = dinos.map(d => d.total);  
   events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
   draw();
+}
+
+function resetGame() {
+  bank = STARTING_MONEY;                       // money back to the start amount
+  dinos.forEach(d => {
+    d.total = 0;                               // every dino total to zero
+    if (d.totalEl) d.totalEl.textContent = 0;  // and the number shown on the intro screen
+  });
+  updateBank();
+  k = 0;                                       // so stop() inside reset() sees a fresh game
+  hover = null;
+  lastHit = null;
+  reset();                                     // new prices, events, schedule, empty graph
+  const go = document.getElementById("go");
+  go.disabled = false;
+  go.textContent = "Start";
 }
 
 function tick() {
@@ -586,6 +604,16 @@ function showResults() {
   const close = document.createElement("button");
   close.textContent = "Close"; close.style.marginTop = "12px";
   close.addEventListener("click", () => overlay.remove());
+  const again = document.createElement("button");
+  again.textContent = "Play again";
+  again.style.cssText = "margin-top:12px; margin-right:8px;";
+  again.addEventListener("click", function () {
+    overlay.remove();
+    simulation.hidden = true;
+    startscreen.hidden = false;
+    resetGame();
+  });
+  card.appendChild(again);
   card.appendChild(close);
   document.body.appendChild(overlay);
 }
