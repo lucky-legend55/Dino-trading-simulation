@@ -590,3 +590,32 @@ document.getElementById("speed").onchange = () => { if (timer) { stop(); start()
 window.addEventListener("resize", draw);
 reset();
 
+const messages = [
+    "Hello! I'm going to teach you how the trading game works.",
+    "Each dinosaur has a share price that moves up and down.",
+    "Buy when you think a price will rise, and sell when you think it will fall.",
+    "Watch out for events. They can make a price jump or crash and they are specific to each dinosaur.",
+    "Pause the game to buy or sell. Good luck!",
+    "Get a high score within the top ten to get into the leaderboard!"
+];
+
+let msgIndex = 0;
+const bubbleText = document.getElementById("bubble-text");
+const nextButton = document.getElementById("nextMsg");
+
+function showMessage() {
+    bubbleText.textContent = messages[msgIndex];
+    if (msgIndex === messages.length - 1) {   // last message
+        nextButton.hidden = true;
+        learnButton.hidden = false;           // reveal the continue button
+    }
+}
+
+nextButton.addEventListener("click", function () {
+    if (msgIndex < messages.length - 1) {
+        msgIndex++;
+        showMessage();
+    }
+});
+
+showMessage();   // show the first message
