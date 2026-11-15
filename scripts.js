@@ -78,7 +78,16 @@ function updateBank(){
 }
 
 updateBank();
-
+// >>> NEW (E): colours for the - and + buttons
+const buttonStyle = document.createElement("style");
+buttonStyle.textContent = `
+  button.small-btn.minus-btn { background:#c23a3a !important; color:#fff !important; border-color:#c23a3a !important; }
+  button.small-btn.minus-btn:hover { background:#a32d2d !important; }
+  button.small-btn.plus-btn  { background:#0f8a5f !important; color:#fff !important; border-color:#0f8a5f !important; }
+  button.small-btn.plus-btn:hover  { background:#0b6e4c !important; }
+  `;
+document.head.appendChild(buttonStyle);
+// <<< END NEW (E)
 const controlBoxes = document.querySelectorAll(".controls");
 
 dinos.forEach(function (dino, i) {
@@ -93,8 +102,8 @@ dinos.forEach(function (dino, i) {
     totalText.textContent = dino.total;
     minusBtn.textContent = "-";
     plusBtn.textContent = "+";
-    minusBtn.className = "small-btn";
-    plusBtn.className = "small-btn";
+    minusBtn.className = "small-btn minus-btn";
+    plusBtn.className = "small-btn plus-btn";
 
     minusBtn.addEventListener("click", function () {
         if (dino.total > 0) {
