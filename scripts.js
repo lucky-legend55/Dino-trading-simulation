@@ -169,7 +169,7 @@ function reset() {
   tipsShown.clear(); 
   hideTip();
   live = STOCKS.map(s => [s.start]);
-  cash = bank; holdings = dinos.map(d => d.total);   // >>> CHANGED (3): was STOCKS.map(() => 0), which threw away the player's starting dinos
+  cash = bank; holdings = dinos.map(d => d.total);  
   events = []; k = 0; pending = null; recov = []; schedule = makeSchedule(); deck = pickEvents(); alertState = null; updateAlert();
   draw();
 }
