@@ -14,6 +14,9 @@ startButton.addEventListener("click",function(){
     startscreen.hidden = true
     intros.hidden = false;
     const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
+    for (let m = 0; m < 6; m++) {
+      dinos[m].total= 0;
+    }
 });
 
 
@@ -588,7 +591,7 @@ function showResults() {
 }
 
 // ===== Tutor tips during the game =====
-const TUTOR_IMG = "imgs/Fulldinosaur.jpg";   // use the same file as your lesson screen
+const TUTOR_IMG = "imgs/Fulldinosaur.png";   // use the same file as your lesson screen
 const TIP_COOLDOWN = 12000;              // ms between tips
 const TIP_SHOW_TIME = 9000;              // ms a tip stays on screen
 const tipsShown = new Set();
