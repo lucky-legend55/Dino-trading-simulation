@@ -220,3 +220,16 @@ body.bg-start {
 .sub{
     font-weight: bold;
 }
+
+#start_screen {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin-top: 80px;
+}
+
+#start_screen button {
+    width: 260px;                  /* same width so they look matched */
+    padding: 15px 20px;
+    font-size: 1.1rem;
+}
