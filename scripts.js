@@ -1,4 +1,5 @@
 let bank = 10000
+const STARTING_MONEY = bank;   // >>> NEW (A): the total the player starts with, used to work out gain or loss
 const startButton = document.getElementById("start"); //button from start page to dniosaur introduction
 const learn = document.getElementById("learn");
 const intros = document.getElementById("intro");
@@ -190,7 +191,7 @@ function tick() {
   if (pending && k >= pending.hitK) hitEvent();
   else if (alertState === "hit" && k >= hideK) alertState = null;
   updateAlert();
-  if (k >= LIVE) { stop(); setTimeout(() => { alertState = null; updateAlert(); }, 4000); }
+  if (k >= LIVE) { stop(); showResults(); setTimeout(() => { alertState = null; updateAlert(); }, 4000); }   // >>> NEW (B): show the results page when the game ends
   draw();
 }
 
@@ -437,7 +438,142 @@ function renderTrade() {
   tradeTotal.textContent = "Bank " + money(cash) + " + portfolio " + money(portfolioValue()) + " = total " + money(cash + portfolioValue());
 }
 // <<< END CHANGED (8) -------------------------------------------------------------------------
+const LEADERBOARD_KEY = "dinoGameLeaderboard";   // the name of the permanent storage slot
+const LEADERBOARD_SIZE = 10;
 
+// Takes the player's trade total (bank + value of the stocks they own) and returns the total
+// percentage gain (positive) or loss (negative) compared with the money they started with.
+function calcPercentChange(tradeTotal) {
+  return (tradeTotal - STARTING_MONEY) / STARTING_MONEY * 100;
+}
+const formatPercent = pct => (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%";
+
+// Permanent storage: localStorage keeps the list even after the page or browser is closed.
+function loadLeaderboard() {
+  try {
+    const list = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
+    if (!Array.isArray(list)) return [];
+    return list.filter(e => e && typeof e.name === "string" && Number.isFinite(e.pct)).sort((a, b) => b.pct - a.pct);
+  } catch (err) { return []; }       // storage blocked or damaged: carry on with an empty board
+}
+function saveLeaderboard(list) {
+  try { localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(list)); return true; }
+  catch (err) { return false; }
+}
+
+// Is this score good enough to be in the top 10?
+function inTopTen(pct) {
+  const list = loadLeaderboard();
+  return list.length < LEADERBOARD_SIZE || pct > list[list.length - 1].pct;
+}
+
+// Adds a score, keeps only the best 10 (best first), saves them, and returns the list and the new entry.
+function addScore(name, pct, total) {
+  const entry = { name, pct, total, date: new Date().toISOString().slice(0, 10) };
+  const list = loadLeaderboard();
+  list.push(entry);
+  list.sort((a, b) => b.pct - a.pct);        // sort is stable, so on a tie the earlier score stays higher
+  const top = list.slice(0, LEADERBOARD_SIZE);
+  saveLeaderboard(top);
+  return { top, entry };
+}
+
+const resultsStyle = document.createElement("style");
+resultsStyle.textContent = `
+  .results-overlay { position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+    padding:16px; background:rgba(0,0,0,.55); overflow-y:auto; }
+  .results-card { width:min(520px,100%); max-height:100%; overflow-y:auto; padding:20px; border-radius:12px;
+    background:var(--panel,#fff); color:var(--text,#111); border:1px solid var(--grid,#ccc); }
+  .results-card h2 { margin:0 0 8px; }
+  .results-big { font-size:2.4rem; font-weight:700; margin:4px 0; }
+  .results-big.up { color:var(--good,#0f8a5f); }
+  .results-big.down { color:var(--bad,#c23a3a); }
+  .results-card form { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+  .results-card input { flex:1; min-width:140px; padding:8px; font:inherit; }
+  .results-card table { width:100%; border-collapse:collapse; margin-top:10px; font-variant-numeric:tabular-nums; }
+  .results-card th, .results-card td { text-align:left; padding:6px 4px; border-top:1px solid var(--grid,#ddd); }
+  .results-card tr.me td { font-weight:700; background:rgba(46,111,217,.18); }
+`;
+document.head.appendChild(resultsStyle);
+
+// Draws the leaderboard table into a container. "mine" is the entry to highlight (if any).
+function renderLeaderboard(container, list, mine) {
+  container.innerHTML = "";
+  const h = document.createElement("h3"); h.textContent = "Leaderboard: top " + LEADERBOARD_SIZE;
+  container.appendChild(h);
+  if (!list.length) { const p = document.createElement("p"); p.textContent = "No scores yet."; container.appendChild(p); return; }
+  const table = document.createElement("table");
+  table.innerHTML = "<tr><th>#</th><th>Name</th><th>Gain / loss</th><th>Total</th></tr>";
+  list.forEach((e, i) => {
+    const row = document.createElement("tr");
+    if (e === mine) row.className = "me";
+    [i + 1, e.name, formatPercent(e.pct), money(e.total)].forEach(v => {
+      const td = document.createElement("td"); td.textContent = v;   // textContent, so a name can never inject HTML
+      row.appendChild(td);
+    });
+    table.appendChild(row);
+  });
+  container.appendChild(table);
+}
+
+// The last page: final percentage, name entry if the score is in the top 10, and the leaderboard.
+function showResults() {
+  const stocksValue = portfolioValue();
+  const total = cash + stocksValue;
+  const pct = calcPercentChange(total);
+
+  const overlay = document.createElement("div");
+  overlay.className = "results-overlay";
+  const card = document.createElement("div");
+  card.className = "results-card";
+  card.setAttribute("role", "dialog"); card.setAttribute("aria-modal", "true"); card.setAttribute("aria-label", "Game results");
+  overlay.appendChild(card);
+
+  const title = document.createElement("h2"); title.textContent = "Game over";
+  const big = document.createElement("div");
+  big.className = "results-big " + (pct >= 0 ? "up" : "down");
+  big.textContent = formatPercent(pct);
+  const detail = document.createElement("p");
+  detail.textContent = "Final total " + money(total) + " (bank " + money(cash) + " + stocks " + money(stocksValue)+ ")" ;
+  const boardBox = document.createElement("div");
+  card.append(title, big, detail);
+
+  if (inTopTen(pct)) {
+    const msg = document.createElement("p");
+    msg.textContent = "You made the top " + LEADERBOARD_SIZE + "! Enter your name to save your score.";
+    const form = document.createElement("form");
+    const input = document.createElement("input");
+    input.type = "text"; input.maxLength = 20; input.placeholder = "Your name"; input.setAttribute("aria-label", "Your name");
+    const save = document.createElement("button");
+    save.type = "submit"; save.textContent = "Save score";
+    form.append(input, save);
+    form.addEventListener("submit", ev => {
+      ev.preventDefault();
+      const name = input.value.trim().slice(0, 20) || "Anonymous";
+      const { top, entry } = addScore(name, pct, total);   // saved permanently here
+      form.remove();
+      msg.textContent = "Score saved as " + name + ".";
+      renderLeaderboard(boardBox, top, entry);
+    });
+    card.append(msg, form);
+    renderLeaderboard(boardBox, loadLeaderboard(), null);
+    setTimeout(() => input.focus(), 0);
+  } else {
+    const list = loadLeaderboard();
+    const msg = document.createElement("p");
+    msg.textContent = "Not quite top " + LEADERBOARD_SIZE + ". You need more than " + formatPercent(list[list.length - 1].pct) + " to get on the board.";
+    card.appendChild(msg);
+    renderLeaderboard(boardBox, list, null);
+  }
+  card.appendChild(boardBox);
+
+  const close = document.createElement("button");
+  close.textContent = "Close"; close.style.marginTop = "12px";
+  close.addEventListener("click", () => overlay.remove());
+  card.appendChild(close);
+  document.body.appendChild(overlay);
+}
+// <<< END NEW (C) -------------------------------------------------------------------------
 // ---- Interaction
 canvas.addEventListener("mousemove", ev => {
   const r = canvas.getBoundingClientRect(), { pad, inner } = canvas._m;
