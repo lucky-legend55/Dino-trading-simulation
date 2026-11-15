@@ -5,10 +5,12 @@ const learn = document.getElementById("learn");
 const intros = document.getElementById("intro");
 const lessonButton= document.getElementById("lesson");
 const learnButton= document.getElementById("learnbtn");
+const startscreen = document.getElementById("start_screen");
+
+startscreen.hidden = false
 
 startButton.addEventListener("click",function(){
-    startButton.remove();
-    lessonButton.remove()
+    startscreen.hidden = true
     intros.hidden = false;
     const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
 });
@@ -48,8 +50,8 @@ const finalslide = document.getElementById("finished");
 
 finalButton.addEventListener("click",function(){
     finalButton.remove();
-    simulation.hidden = true
-    finalslide.hidden = false;
+    simulation.hidden = true;
+    startscreen.hidden = false;
 });
 function openPopup(text){
     document.getElementById('popup-text').innerText = text;
