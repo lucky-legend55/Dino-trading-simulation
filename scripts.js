@@ -1,5 +1,5 @@
 let bank = 10000
-const STARTING_MONEY = bank;   // >>> NEW (A): the total the player starts with, used to work out gain or loss
+const STARTING_MONEY = bank;  
 const startButton = document.getElementById("start"); //button from start page to dniosaur introduction
 const learn = document.getElementById("learn");
 const intros = document.getElementById("intro");
@@ -38,14 +38,11 @@ const to_simulate = document.getElementById("to_trading"); //button from dinosau
 const simulation = document.getElementById("simulation");
 
 to_simulate.addEventListener("click",function(){
-    //to_simulate.remove();
     simulation.hidden = false;
     intros.hidden = true;
-    // >>> CHANGED (1): link the simulation to what the player chose on the intro screen
     cash = bank;                           // the simulation bank = the money left after buying the starting dinos
     holdings = dinos.map(d => d.total);    // the simulation starts with the dinos the player picked
     draw();                                // redraw now the page is visible, so the boxes show the real values
-    // <<< END CHANGED (1)
 });
 
 const finalButton = document.getElementById("finalscreen"); //button from start page to dniosaur introduction
@@ -82,7 +79,6 @@ function updateBank(){
 }
 
 updateBank();
-// >>> NEW (E): colours for the - and + buttons
 const buttonStyle = document.createElement("style");
 buttonStyle.textContent = `
   button.small-btn.minus-btn { background:#c23a3a !important; color:#fff !important; border-color:#c23a3a !important; }
@@ -91,11 +87,11 @@ buttonStyle.textContent = `
   button.small-btn.plus-btn:hover  { background:#0b6e4c !important; }
   `;
 document.head.appendChild(buttonStyle);
-// <<< END NEW (E)
+
 const controlBoxes = document.querySelectorAll(".controls");
 
 dinos.forEach(function (dino, i) {
-    const box = controlBoxes[i];          // the i-th controls box in the grid
+    const box = controlBoxes[i];          // the i controls box in the grid
 
     const label = document.createElement("span");
     const totalText = document.createElement("span");
@@ -104,7 +100,7 @@ dinos.forEach(function (dino, i) {
 
     label.textContent = dino.name + ": ";
     totalText.textContent = dino.total;
-    dino.totalEl = totalText;          // NEW: lets resetGame() zero the number on screen
+    dino.totalEl = totalText;        
     minusBtn.textContent = "-";
     plusBtn.textContent = "+";
     minusBtn.className = "small-btn minus-btn";
@@ -113,7 +109,7 @@ dinos.forEach(function (dino, i) {
     minusBtn.addEventListener("click", function () {
         if (dino.total > 0) {
             dino.total--;
-            bank = bank + dino.cost;        // selling gives the money back
+            bank = bank + dino.cost;        // selling= money back
             totalText.textContent = dino.total;
             updateBank();
             }
@@ -146,7 +142,7 @@ const STOCKS = [
   { id: 6, name: "mia",start: 400, vol: 0.006 }
 ];
 
-// ---- Random events: a pool of 15. Each game picks 12 of them at random. Changes are fractions (0.3 = +30%).
+// ---- 15 Random events. Each game picks 8 of them at random
 const EVENTS = [
   { id: 1, stock: 1,  name: "Lazy Lewis goes for a run",           lo:  0.30, hi:  0.60 },
   { id: 2,  stock: 1, name:"Lazy Lewis has a full day scrolling",  lo: -0.60, hi: -0.30 },
@@ -171,12 +167,12 @@ const WARN_TICKS = WARN_SECS * RES;
 //const START_CASH = bank;   // the player's starting bank
 const CUR = "Rocks";            // currency symbol shown in the boxes
 const money = n => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + CUR;
-const MAX_EVENTS = 8;     // events picked per game, out of the 25 in EVENTS
+const MAX_EVENTS = 8;    
 
 // ---- State
 let live, events, k, timer = null, hover = null;
 let pending = null, recov = [], schedule = [], deck = [], alertState = null, hideK = 0, lastHit = null;
-let cash = bank, holdings = dinos.map(d => d.total);   // >>> CHANGED (2): was STOCKS.map(() => 0). Dinos and STOCKS are in the same order.
+let cash = bank, holdings = dinos.map(d => d.total); 
 
 function reset() {
   stop();
@@ -192,13 +188,13 @@ function resetGame() {
   bank = STARTING_MONEY;                       // money back to the start amount
   dinos.forEach(d => {
     d.total = 0;                               // every dino total to zero
-    if (d.totalEl) d.totalEl.textContent = 0;  // and the number shown on the intro screen
+    if (d.totalEl) d.totalEl.textContent = 0;  // number shown on the intro screen
   });
   updateBank();
-  k = 0;                                       // so stop() inside reset() sees a fresh game
+  k = 0;                                       //stop() and reset() sees a fresh game
   hover = null;
   lastHit = null;
-  reset();                                     // new prices, events, schedule, empty graph
+  reset();                   
   const go = document.getElementById("go");
   go.disabled = false;
   go.textContent = "Start";
@@ -215,10 +211,10 @@ function tick() {
   });
   if (!pending && alertState !== "hit" && schedule.length && k >= schedule[0]) {
     schedule.shift();
-    const ev = deck.shift();   // next of the 12 events picked for this game
+    const ev = deck.shift();   // next of the 8 events picked for this game
     const si = ev.stock - 1;  
     const pct = ev.lo + Math.random() * (ev.hi - ev.lo);
-    pending = { si, ev, pct, hitK: k + WARN_TICKS };   // warn first, hit later
+    pending = { si, ev, pct, hitK: k + WARN_TICKS };   //warn first, hit later
     alertState = "warn";
   }
   if (pending && k >= pending.hitK) hitEvent();
@@ -229,7 +225,7 @@ function tick() {
   draw();
 }
 
-// Pick 12 different events at random from the pool of 25 (Fisher-Yates shuffle).
+// Pick 8 different events at random from the pool of 15
 function pickEvents() {
   const pool = EVENTS.slice();
   for (let i = pool.length - 1; i > 0; i--) {
@@ -239,7 +235,7 @@ function pickEvents() {
   return pool.slice(0, MAX_EVENTS);
 }
 
-// Spread the big events across the game at random times, with room for each warning.
+//spread events across time
 function makeSchedule() {
   const margin = 10 * RES, tail = 4 * RES;
   const slot = (LIVE - margin - WARN_TICKS - tail) / MAX_EVENTS;
@@ -291,16 +287,16 @@ function start() {
   const ms = 1000 / RES / Number(document.getElementById("speed").value);
   timer = setInterval(tick, ms);
   document.getElementById("go").textContent = "Pause";
-  renderTrade();   // >>> CHANGED (4): the game is running, so lock the buy/sell buttons
+  renderTrade();   
 }
 function stop() {
   clearInterval(timer); timer = null;
   document.getElementById("go").textContent = k >= LIVE ? "Finished" : (k > 0 ? "Resume" : "Start");
   document.getElementById("go").disabled = k >= LIVE;
-  renderTrade();   // >>> CHANGED (5): the game is paused, so unlock the buy/sell buttons
+  renderTrade(); 
 }
 
-// ---- Drawing
+//drawing
 const canvas = document.getElementById("chart");
 const ctx = canvas.getContext("2d");
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -326,7 +322,7 @@ function draw() {
     ctx.fillStyle = css("--muted"); ctx.textAlign = "right"; ctx.fillText(p, pad.l - 6, y(p));
   });
 
-  // x labels
+  //x labels
   ctx.fillStyle = css("--muted"); ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";   ctx.fillText("Start", pad.l, h - 6);
   ctx.textAlign = "center"; ctx.fillText("+1 month", xl(LIVE / 2), h - 6);
@@ -364,17 +360,17 @@ function draw() {
   document.getElementById("clock").textContent = "Day " + simDay(k) + " of " + SIM_DAYS + "  (" + mmss(secs(k)) + " / " + mmss(secs(LIVE)) + ")";
   updateBoxes();
   renderLegend();
-  renderTrade();   // >>> CHANGED (6): keep the buy/sell prices, owned counts and button states up to date
+  renderTrade(); 
 }
 
-// >>> CHANGED (7): portfolio value now comes from one helper: shares owned of each stock x that stock's current price
+
 function portfolioValue() {
   return holdings.reduce((sum, n, i) => sum + n * live[i][k], 0);
 }
 
-// Bank = cash on hand. Portfolio value = shares owned x current price, added up across all six stocks.
+//bank and portfolio value
 function updateBoxes() {
-  const value = portfolioValue();   // >>> CHANGED (7): was an inline holdings.reduce(...)
+  const value = portfolioValue();   
   document.getElementById("bank").textContent = money(cash);
   document.getElementById("portfolio").textContent = money(value);
 }
@@ -392,17 +388,15 @@ function renderLegend() {
   });
 }
 
-// >>> CHANGED (8): NEW buy/sell feature ------------------------------------------------------
-// The panel is built here in JavaScript and placed under the row of stock boxes, so no HTML edit is needed.
 
-// Buy or sell ONE share of stock i at its current price. Only works while the game is paused.
+// buy or sell share of stock i at its current price
 function trade(i, side) {
   if (timer || k >= LIVE) return;              // game running or finished: no trading
   const price = live[i][k];
   if (side === "buy") {
     if (cash < price) return;                  // not enough money in the bank: the buy is refused
-    cash -= price;                             // pay for the share...
-    holdings[i]++;                             // ...and own one more
+    cash -= price;                             
+    holdings[i]++;                             
   } else {
     if (holdings[i] < 1) return;               // nothing to sell
     cash += price;                             // selling puts the money back in the bank
@@ -454,7 +448,7 @@ tradeTotal.className = "trade-total";
 tradePanel.appendChild(tradeTotal);
 document.getElementById("legend").after(tradePanel);
 
-// Updates the panel. Buttons are only built once and then enabled/disabled, so clicks are never lost.
+
 function renderTrade() {
   if (!live) return;                                   // first reset() runs before any prices exist
   const canTrade = !timer && k < LIVE;                 // trading is only allowed while paused
@@ -465,43 +459,42 @@ function renderTrade() {
     const p = live[i][k];
     r.price.textContent = money(p);
     r.owned.textContent = holdings[i];
-    r.value.textContent = money(holdings[i] * p);      // this stock's share of the portfolio
-    r.sell.disabled = !canTrade || holdings[i] < 1;    // can't sell what you don't own
-    r.buy.disabled = !canTrade || cash < p;            // can't buy without enough in the bank
+    r.value.textContent = money(holdings[i] * p);      //this stock's share of the portfolio
+    r.sell.disabled = !canTrade || holdings[i] < 1;    //can't sell if not enough
+    r.buy.disabled = !canTrade || cash < p;            //can't buy without enough money
   });
   tradeTotal.textContent = "Bank " + money(cash) + " + portfolio " + money(portfolioValue()) + " = total " + money(cash + portfolioValue());
 }
-// <<< END CHANGED (8) -------------------------------------------------------------------------
-const LEADERBOARD_KEY = "dinoGameLeaderboard";   // the name of the permanent storage slot
+
+const LEADERBOARD_KEY = "dinoGameLeaderboard";   
 const LEADERBOARD_SIZE = 10;
 
-// Takes the player's trade total (bank + value of the stocks they own) and returns the total
-// percentage gain (positive) or loss (negative) compared with the money they started with.
+
+//percentage gain or loss compared with start money
 function calcPercentChange(tradeTotal) {
   return (tradeTotal - STARTING_MONEY) / STARTING_MONEY * 100;
 }
 const formatPercent = pct => (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%";
 
-// Permanent storage: localStorage keeps the list even after the page or browser is closed.
 function loadLeaderboard() {
   try {
     const list = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
     if (!Array.isArray(list)) return [];
     return list.filter(e => e && typeof e.name === "string" && Number.isFinite(e.pct)).sort((a, b) => b.pct - a.pct);
-  } catch (err) { return []; }       // storage blocked or damaged: carry on with an empty board
+  } catch (err) { return []; }       
 }
 function saveLeaderboard(list) {
   try { localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(list)); return true; }
   catch (err) { return false; }
 }
 
-// Is this score good enough to be in the top 10?
+//leaderboard
 function inTopTen(pct) {
   const list = loadLeaderboard();
   return list.length < LEADERBOARD_SIZE || pct > list[list.length - 1].pct;
 }
 
-// Adds a score, keeps only the best 10 (best first), saves them, and returns the list and the new entry.
+
 function addScore(name, pct, total) {
   const entry = { name, pct, total, date: new Date().toISOString().slice(0, 10) };
   const list = loadLeaderboard();
@@ -530,7 +523,7 @@ resultsStyle.textContent = `
 `;
 document.head.appendChild(resultsStyle);
 
-// Draws the leaderboard table into a container. "mine" is the entry to highlight (if any).
+//draws leaderboard
 function renderLeaderboard(container, list, mine) {
   container.innerHTML = "";
   const h = document.createElement("h3"); h.textContent = "Leaderboard: top " + LEADERBOARD_SIZE;
@@ -542,7 +535,7 @@ function renderLeaderboard(container, list, mine) {
     const row = document.createElement("tr");
     if (e === mine) row.className = "me";
     [i + 1, e.name, formatPercent(e.pct), money(e.total)].forEach(v => {
-      const td = document.createElement("td"); td.textContent = v;   // textContent, so a name can never inject HTML
+      const td = document.createElement("td"); td.textContent = v;   
       row.appendChild(td);
     });
     table.appendChild(row);
@@ -550,7 +543,7 @@ function renderLeaderboard(container, list, mine) {
   container.appendChild(table);
 }
 
-// The last page: final percentage, name entry if the score is in the top 10, and the leaderboard.
+
 function showResults() {
   const stocksValue = portfolioValue();
   const total = cash + stocksValue;
@@ -584,7 +577,7 @@ function showResults() {
     form.addEventListener("submit", ev => {
       ev.preventDefault();
       const name = input.value.trim().slice(0, 20) || "Anonymous";
-      const { top, entry } = addScore(name, pct, total);   // saved permanently here
+      const { top, entry } = addScore(name, pct, total);   //saved permanently here
       form.remove();
       msg.textContent = "Score saved as " + name + ".";
       renderLeaderboard(boardBox, top, entry);
@@ -618,10 +611,10 @@ function showResults() {
   document.body.appendChild(overlay);
 }
 
-// ===== Tutor tips during the game =====
+//tutor tips
 const TUTOR_IMG = "imgs/Fulldinosaur.png";   // use the same file as your lesson screen
-const TIP_COOLDOWN = 12000;              // ms between tips
-const TIP_SHOW_TIME = 9000;              // ms a tip stays on screen
+const TIP_COOLDOWN = 12000;    //time between tips
+const TIP_SHOW_TIME = 9000;              
 const tipsShown = new Set();
 let lastTipTime = 0, tipTimer = null;
 
@@ -644,14 +637,14 @@ tipBox.innerHTML = `<img alt="Tutor dinosaur"><div class="tip-bubble"><p></p><bu
 tipBox.querySelector("img").src = TUTOR_IMG;
 const tipText = tipBox.querySelector("p");
 tipBox.querySelector("button").addEventListener("click", hideTip);
-simulation.appendChild(tipBox);          // inside #simulation, so it only shows on the trading screen
+simulation.appendChild(tipBox);          //inside #simulation, so it only shows on the trading screen
 
 function hideTip() {
   tipBox.classList.remove("show");
   clearTimeout(tipTimer);
 }
 
-// Shows a tip once. Returns true if it was shown.
+//shows a tip only once
 function showTip(id, text) {
   if (tipsShown.has(id)) return false;
   if (Date.now() - lastTipTime < TIP_COOLDOWN) return false;
@@ -669,10 +662,9 @@ function checkTips() {
   const invested = stockValues.reduce((a, b) => a + b, 0);
   const total = cash + invested;
 
-  // 1. First few seconds: how trading works
+
   if (k >= 2 && showTip("pause", "Tip: you can only buy and sell while the game is paused. Press Pause whenever you want to trade.")) return;
 
-  // 2. Warning about an event hitting a dino you own (or one you could profit from)
   if (alertState === "warn" && pending) {
     const name = dinos[pending.si].name;
     const owned = holdings[pending.si] > 0;
@@ -680,30 +672,25 @@ function checkTips() {
     if (pending.pct >= 0 && !owned && showTip("warnGood", "Good news is coming for " + name + ". You don't own any, so pause and see if you can buy before it hits.")) return;
   }
 
-  // 3. After a crash: recovery
   if (alertState === "hit" && lastHit && lastHit.pct < 0 && lastHit.target &&
       showTip("recover", "Prices often bounce back part of the way after a crash. Selling in a panic can lock in your loss.")) return;
 
-  // 4. Hasn't bought anything
   if (k >= 20 * RES && invested === 0 &&
       showTip("noBuy", "You haven't bought any dinos yet. Your bank won't grow on its own. Pause and buy one you think will rise.")) return;
 
-  // 5. Too much in one dino
   if (invested > 0 && invested > 0.3 * total) {
     const biggest = Math.max(...stockValues);
     if (biggest / invested > 0.7 &&
         showTip("oneDino", "Most of your money is in " + dinos[stockValues.indexOf(biggest)].name + ". If that dino crashes you lose a lot. Spreading money across dinos is safer.")) return;
   }
 
-  // 6. Halfway check-in
   if (k >= LIVE / 2) {
     const pct = calcPercentChange(total);
     showTip("half", "Halfway there! You're " + (pct >= 0 ? "up " : "down ") + Math.abs(pct).toFixed(1) + "% so far. " +
       (pct >= 0 ? "Keep it up!" : "There's still time to recover."));
   }
 }
-// <<< END NEW (C) -------------------------------------------------------------------------
-// ---- Interaction
+//interaction
 canvas.addEventListener("mousemove", ev => {
   const r = canvas.getBoundingClientRect(), { pad, inner } = canvas._m;
   const mx = ev.clientX - r.left - pad.l;
@@ -732,9 +719,9 @@ const nextButton = document.getElementById("nextMsg");
 
 function showMessage() {
     bubbleText.textContent = messages[msgIndex];
-    if (msgIndex === messages.length - 1) {   // last message
+    if (msgIndex === messages.length - 1) {   // lastmessage
         nextButton.hidden = true;
-        learnButton.hidden = false;           // reveal the continue button
+        learnButton.hidden = false;           //reveal the continue button
     }
 }
 
