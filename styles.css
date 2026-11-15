@@ -283,9 +283,9 @@ body.bg-start {
 
 .bubble button {
     display: block;
-    margin: 15px 0 0 auto;     /* Next button on the right* /
+    margin: 15px 0 0 auto;     
 }
 
 #learnbtn {
     margin: 0 auto;
-}
+    }
