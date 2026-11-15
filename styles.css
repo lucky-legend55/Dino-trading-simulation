@@ -89,7 +89,6 @@ button {
     box-sizing: border-box;
     overflow: hidden;
     background-color: white;
-    /* no width or height here, the grid sets the size */
 }
 
 .box img {
