@@ -1,9 +1,29 @@
 let bank = 10000
 const startButton = document.getElementById("start"); //button from start page to dniosaur introduction
+const learn = document.getElementById("learn");
 const intros = document.getElementById("intro");
+const lessonButton= document.getElementById("lesson");
+const learnButton= document.getElementById("learnbtn");
 
 startButton.addEventListener("click",function(){
     startButton.remove();
+    lessonButton.remove()
+    intros.hidden = false;
+    const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
+});
+
+
+lessonButton.addEventListener("click",function(){
+    startButton.remove();
+    lessonButton.remove()
+    learn.hidden = false;
+
+});
+
+
+learnButton.addEventListener("click",function(){
+    learnButton.remove();
+    learn.hidden = true
     intros.hidden = false;
     const bank_amount = document.getElementById("screen2bank").innerText = `Bank: ${bank} Rocks`
 });
