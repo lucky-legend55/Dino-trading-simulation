@@ -51,17 +51,9 @@ finalButton.addEventListener("click",function(){
     simulation.hidden = true
     finalslide.hidden = false;
 });
-function openPopup(i) {
-    popupIndex = i;
-    document.getElementById("popup-title").textContent = dinos[i].name;
-    document.getElementById("popup-desc").textContent = dinos[i].desc;
-
-    const img = document.getElementById("popup-img");
-    img.src = dinos[i].img;
-    img.alt = dinos[i].name;
-
-    document.getElementById("popup").style.display = "flex";
-    drawPopupChart();
+function openPopup(text){
+    document.getElementById('popup-text').innerText = text;
+    document.getElementById('popup').style.display='flex';
 }
 
 function closePopup(){
