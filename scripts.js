@@ -588,7 +588,7 @@ function showResults() {
 }
 
 // ===== Tutor tips during the game =====
-const TUTOR_IMG = "imgs/fulldino.jpg";   // use the same file as your lesson screen
+const TUTOR_IMG = "imgs/Fulldinosaur.jpg";   // use the same file as your lesson screen
 const TIP_COOLDOWN = 12000;              // ms between tips
 const TIP_SHOW_TIME = 9000;              // ms a tip stays on screen
 const tipsShown = new Set();
