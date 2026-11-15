@@ -74,7 +74,7 @@ button {
     justify-content: center;
 }
 
-/* ---------- Dino grid (3 columns x 4 rows) ---------- */
+/* Dino grid (3 columns x 4 rows)  */
 .grid {
     display: grid;
     grid-template-columns: repeat(3, 400px);     /* 3 columns */
@@ -97,7 +97,7 @@ button {
     object-fit: cover;
 }
 
-/* ---------- Simulation screen ---------- */
+/*Simulation screen*/
 #bankscreen {
     display: flex;
     justify-content: space-between;
@@ -138,7 +138,7 @@ button {
     font-size: 32px;
 }
 
-/* ---------- Popup ---------- */
+/* Popup */
 .popup {
     position: fixed;
     top: 0;
@@ -153,7 +153,7 @@ button {
 }
 
 .popup-content {
-    background: var(--panel);      /* was #fff, which makes text unreadable in dark mode */
+    background: var(--panel);      
     color: var(--text);
     padding: 20px;
     border-radius: 8px;
@@ -181,7 +181,7 @@ button {
     flex: 1;
     min-width: 0;
     width: 50%;
-    height: 220px;                 /* beats your global canvas { height: 400px } */
+    height: 220px;                 
     border: 1px solid var(--grid);
     border-radius: 6px;
 }
@@ -214,7 +214,7 @@ body.bg-start {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed;   /* image stays put when scrolling */
+    background-attachment: fixed;   /* image stays while scrolling */
 }
 
 .sub{
@@ -283,7 +283,7 @@ body.bg-start {
 
 .bubble button {
     display: block;
-    margin: 15px 0 0 auto;     /* Next button on the right */
+    margin: 15px 0 0 auto;     /* Next button on the right* /
 }
 
 #learnbtn {
