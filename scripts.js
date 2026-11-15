@@ -451,3 +451,4 @@ document.getElementById("go").onclick = () => { timer ? stop() : start(); update
 document.getElementById("speed").onchange = () => { if (timer) { stop(); start(); } };
 window.addEventListener("resize", draw);
 reset();
+
